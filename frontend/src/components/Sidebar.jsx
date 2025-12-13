@@ -4,6 +4,7 @@ const links = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/rooms', label: 'Odalar' },
   { to: '/customers', label: 'Müşteriler' },
+  { to: '/staff', label: 'Personel' },
   { to: '/reservations/new', label: 'Rezervasyon Oluştur' },
   { to: '/stock', label: 'Stok' },
   { to: '/services', label: 'Ekstra Hizmetler' },

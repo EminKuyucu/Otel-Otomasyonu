@@ -1,11 +1,14 @@
 import api from './api'
 
 export const odaService = {
-  getAll: () => api.get('/oda/'),
-  getById: (id) => api.get(`/oda/${id}`),
-  create: (data) => api.post('/oda/', data),
-  update: (id, data) => api.put(`/oda/${id}`, data),
-  delete: (id) => api.delete(`/oda/${id}`),
+  getAll: () => api.get('/rooms'),
+  getAvailable: () => api.get('/rooms/available'),
+  getById: (id) => api.get(`/rooms/${id}`),
+  create: (data) => api.post('/rooms', data),
+  update: (id, data) => api.put(`/rooms/${id}`, data),
+  updateStatus: (id, status) => api.put(`/rooms/${id}/status`, { durum: status }),
+  delete: (id) => api.delete(`/rooms/${id}`),
 }
+
 
 

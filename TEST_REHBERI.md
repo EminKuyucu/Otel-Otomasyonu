@@ -227,3 +227,5 @@ Sorun yaşıyorsanız:
 4. `test_connection.py` scriptini çalıştırın
 
 
+
+

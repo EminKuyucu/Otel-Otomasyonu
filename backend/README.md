@@ -37,3 +37,5 @@ python app.py
 API `http://localhost:5000` adresinde çalışacaktır.
 
 
+
+

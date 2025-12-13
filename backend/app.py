@@ -10,7 +10,13 @@ load_dotenv()
 app = Flask(__name__)
 
 # CORS ayarları
-CORS(app)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Veritabanı bağlantı ayarları
 app.config['DATABASE_URI'] = os.getenv(
@@ -29,6 +35,7 @@ except Exception as e:
 atexit.register(close_connection)
 
 # Route'lari import et
+from routes.auth_routes import bp as auth_bp
 from routes.oda_routes import bp as rooms_bp
 from routes.musteri_routes import bp as customers_bp
 from routes.rezervasyon_routes import bp as reservations_bp
@@ -38,6 +45,7 @@ from routes.odeme_routes import bp as payments_bp
 from routes.report_routes import bp as reports_bp
 
 # Blueprint'leri kaydet
+app.register_blueprint(auth_bp)
 app.register_blueprint(rooms_bp)
 app.register_blueprint(customers_bp)
 app.register_blueprint(reservations_bp)

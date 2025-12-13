@@ -1,13 +1,13 @@
 from flask import Blueprint, request, jsonify
-from database import db
-from models import Personel
+from database import execute_query
+from models.personel import Personel
 from auth.jwt_utils import generate_token
 from auth.password_utils import verify_password
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
 
-@bp.route('/login', methods=['POST'])
+@bp.route('/login', methods=['POST', 'OPTIONS'])
 def login():
     """
     Personel giriş endpoint'i.
@@ -21,6 +21,10 @@ def login():
     Returns:
         JSON: Token ve kullanıcı bilgileri (200) veya hata mesajı (401)
     """
+    if request.method == 'OPTIONS':
+        # CORS preflight request
+        return jsonify({}), 200
+    
     try:
         data = request.get_json()
         
@@ -41,23 +45,30 @@ def login():
             }), 400
         
         # Kullanıcıyı bul (kullanici_adi email olarak kullanılıyor)
-        personel = Personel.query.filter_by(kullanici_adi=email).first()
+        query = """
+        SELECT personel_id, kullanici_adi, sifre, ad_soyad, gorev, aktiflik 
+        FROM personel 
+        WHERE kullanici_adi = %s
+        """
+        result = execute_query(query, params=(email,), fetch=True)
         
-        if not personel:
+        if not result or len(result) == 0:
             return jsonify({
                 'error': 'Giriş başarısız',
                 'message': 'Email veya şifre hatalı'
             }), 401
         
+        personel_data = result[0]
+        
         # Aktiflik kontrolü
-        if not personel.aktiflik:
+        if not personel_data.get('aktiflik'):
             return jsonify({
                 'error': 'Hesap devre dışı',
                 'message': 'Hesabınız aktif değil. Lütfen yöneticinizle iletişime geçin.'
             }), 401
         
         # Şifre kontrolü
-        if not verify_password(password, personel.sifre):
+        if not verify_password(password, personel_data.get('sifre')):
             return jsonify({
                 'error': 'Giriş başarısız',
                 'message': 'Email veya şifre hatalı'
@@ -65,9 +76,9 @@ def login():
         
         # Token üret
         token = generate_token(
-            personel_id=personel.personel_id,
-            kullanici_adi=personel.kullanici_adi,
-            gorev=personel.gorev
+            personel_id=personel_data.get('personel_id'),
+            kullanici_adi=personel_data.get('kullanici_adi'),
+            gorev=personel_data.get('gorev')
         )
         
         # Başarılı giriş
@@ -75,10 +86,10 @@ def login():
             'message': 'Giriş başarılı',
             'token': token,
             'user': {
-                'personel_id': personel.personel_id,
-                'kullanici_adi': personel.kullanici_adi,
-                'ad_soyad': personel.ad_soyad,
-                'gorev': personel.gorev
+                'personel_id': personel_data.get('personel_id'),
+                'kullanici_adi': personel_data.get('kullanici_adi'),
+                'ad_soyad': personel_data.get('ad_soyad'),
+                'gorev': personel_data.get('gorev')
             }
         }), 200
         
@@ -87,5 +98,7 @@ def login():
             'error': 'Sunucu hatası',
             'message': str(e)
         }), 500
+
+
 
 

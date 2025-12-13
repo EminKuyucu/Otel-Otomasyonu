@@ -98,3 +98,5 @@ hashed_password = hash_password("12345")
 - Şifreler bcrypt ile hashlenir ve düz metin olarak saklanmaz
 
 
+
+

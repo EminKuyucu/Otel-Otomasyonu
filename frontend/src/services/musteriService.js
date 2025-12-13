@@ -1,11 +1,14 @@
 import api from './api'
 
 export const musteriService = {
-  getAll: () => api.get('/musteri/'),
-  getById: (id) => api.get(`/musteri/${id}`),
-  create: (data) => api.post('/musteri/', data),
-  update: (id, data) => api.put(`/musteri/${id}`, data),
-  delete: (id) => api.delete(`/musteri/${id}`),
+  getAll: () => api.get('/customers'),
+  getById: (id) => api.get(`/customers/${id}`),
+  create: (data) => api.post('/customers', data),
+  update: (id, data) => api.put(`/customers/${id}`, data),
+  delete: (id) => api.delete(`/customers/${id}`),
+  getExpenses: (id) => api.get(`/customers/${id}/harcamalar`),
+  getReviews: (id) => api.get(`/customers/${id}/degerlendirme`),
 }
+
 
 
