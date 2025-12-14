@@ -70,22 +70,22 @@ class DatabaseConnection:
 def init_database(app=None):
     """
     Veritabanı bağlantı havuzunu başlatır.
-
+    
     Args:
         app: Flask uygulama instance'ı (opsiyonel)
     """
     global connection_pool
-
+    
     try:
         # Veritabanı bağlantı bilgilerini al
         if app:
             database_uri = app.config.get('DATABASE_URI')
         else:
             database_uri = os.getenv('DATABASE_URI', 'mysql://root:password@localhost/otel_otomasyonu_pro')
-
+        
         if not database_uri:
             raise ValueError("DATABASE_URI konfigürasyonu bulunamadı")
-
+        
         # URI'yi parse et (mysql://user:password@host:port/database)
         if database_uri.startswith('mysql://'):
             # Özel URI formatını parse et
@@ -131,7 +131,7 @@ def init_database(app=None):
                 }
             except:
                 raise ValueError("Geçersiz DATABASE_URI formatı. Beklenen: user:password@host:port/database")
-
+        
         # Bağlantı havuzu oluştur (şimdilik tek bağlantı)
         connection_pool = connection_config
 
@@ -155,7 +155,7 @@ def get_db_connection():
     """
     if connection_pool is None:
         raise Exception("Veritabanı bağlantısı başlatılmamış. init_database() çağrılmalı.")
-
+        
     db_conn = DatabaseConnection(**connection_pool)
     try:
         with db_conn as conn:
@@ -173,10 +173,10 @@ def execute_query(query: str, params: Optional[Tuple] = None, fetch: bool = True
         query: SQL sorgusu
         params: Sorgu parametreleri (tuple)
         fetch: Sonuçları getir (SELECT sorguları için True)
-
+    
     Returns:
         List[Dict] veya None: Sorgu sonuçları (SELECT için) veya None
-
+        
     Raises:
         Exception: Sorgu hatası durumunda
     """
@@ -216,31 +216,31 @@ def execute_many(query: str, params_list: List[Tuple]) -> int:
             with conn.cursor() as cursor:
                 cursor.executemany(query, params_list)
                 return cursor.rowcount
-        except Exception as e:
+    except Exception as e:
             conn.rollback()
             logging.error(f"Çoklu sorgu çalıştırma hatası: {str(e)}")
-            raise
+        raise
 
 
 def test_connection() -> Tuple[bool, str]:
     """
     Veritabanı bağlantısını test eder.
-
+    
     Returns:
         tuple: (success: bool, message: str)
     """
     try:
         if connection_pool is None:
             return False, "Veritabanı bağlantısı başlatılmamış"
-
+        
         # Basit bir sorgu ile bağlantıyı test et
         result = execute_query("SELECT 1 as test", fetch=True)
-
+        
         if result and len(result) > 0:
-            return True, "Veritabanı bağlantısı başarılı"
+        return True, "Veritabanı bağlantısı başarılı"
         else:
             return False, "Veritabanı sorgu hatası"
-
+        
     except Exception as e:
         error_msg = f"Veritabanı bağlantı hatası: {str(e)}"
         logging.error(error_msg)
@@ -252,11 +252,11 @@ def close_connection():
     Veritabanı bağlantı havuzunu kapatır.
     """
     global connection_pool
-
+    
     try:
         connection_pool = None
         logging.info("Veritabanı bağlantısı kapatıldı")
-
+        
     except Exception as e:
         logging.error(f"Bağlantı kapatma hatası: {str(e)}")
 
