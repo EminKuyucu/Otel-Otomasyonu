@@ -7,6 +7,7 @@ function Customers() {
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const [formData, setFormData] = useState({
     ad: '',
     soyad: '',
@@ -111,6 +112,17 @@ function Customers() {
       {error && (
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
       )}
+
+      {/* Arama */}
+      <div className="mb-6 p-4 bg-white rounded-lg shadow">
+        <input
+          type="text"
+          placeholder="Ad, Soyad, Telefon veya Email ile Ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-3 py-2 border rounded"
+        />
+      </div>
 
       {showForm && (
         <div className="mb-6 p-4 bg-white border rounded-lg">
@@ -226,7 +238,17 @@ function Customers() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {customers.map((customer) => (
+              {customers
+                .filter((customer) => {
+                  const search = searchTerm.toLowerCase()
+                  return (
+                    customer.ad.toLowerCase().includes(search) ||
+                    customer.soyad.toLowerCase().includes(search) ||
+                    customer.telefon.includes(search) ||
+                    customer.email?.toLowerCase().includes(search)
+                  )
+                })
+                .map((customer) => (
                 <tr key={customer.musteri_id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     {customer.ad} {customer.soyad}

@@ -6,6 +6,16 @@ from auth.jwt_utils import token_required
 
 bp = Blueprint('reservations', __name__, url_prefix='/api/reservations')
 
+@bp.route('/options', methods=['GET'])
+@token_required
+def get_reservation_options(current_user):
+    """Rezervasyon durumu seçeneklerini döndür"""
+    try:
+        return jsonify({
+            'statuses': Rezervasyon.DURUM_CHOICES
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 def parse_date(value: str):
     return datetime.strptime(value, '%Y-%m-%d').date()
@@ -31,7 +41,7 @@ def oda_musait_mi(oda_id: int, giris, cikis, exclude_id=None) -> bool:
 
 def oda_fiyat_getir(oda_id: int):
     """Odanın fiyatını ve durumunu döndürür."""
-    query = "SELECT fiyat, durum FROM oda WHERE oda_id = %s"
+    query = "SELECT ucret_gecelik, durum FROM odalar WHERE oda_id = %s"
     result = execute_query(query, params=(oda_id,), fetch=True)
     if not result:
         return None
@@ -40,7 +50,7 @@ def oda_fiyat_getir(oda_id: int):
 
 def oda_durum_guncelle(oda_id: int, durum: str):
     """Oda durumunu gunceller."""
-    update_query = "UPDATE oda SET durum = %s WHERE oda_id = %s"
+    update_query = "UPDATE odalar SET durum = %s WHERE oda_id = %s"
     execute_query(update_query, params=(durum, oda_id), fetch=False)
 
 
@@ -104,7 +114,7 @@ def create_reservation(current_user):
         oda_info = oda_fiyat_getir(data['oda_id'])
         if not oda_info:
             return jsonify({'error': 'Oda bulunamadi'}), 404
-        if oda_info.get('durum') != 'bos':
+        if oda_info.get('durum') != 'Boş':
             return jsonify({'error': 'Oda su anda bos degil'}), 400
 
         # Tarih cakisma kontrolu
@@ -112,7 +122,7 @@ def create_reservation(current_user):
             return jsonify({'error': 'Bu tarih araliginda odada rezervasyon var'}), 400
 
         gun_sayisi = (cikis - giris).days
-        toplam_ucret = float(oda_info['fiyat']) * gun_sayisi
+        toplam_ucret = float(oda_info['ucret_gecelik']) * gun_sayisi
 
         # Rezervasyon ekle
         insert_query = """
@@ -137,7 +147,7 @@ def create_reservation(current_user):
         rez_id = id_result[0]['id']
 
         # Oda durumunu dolu yap
-        oda_durum_guncelle(data['oda_id'], 'dolu')
+        oda_durum_guncelle(data['oda_id'], 'Dolu')
 
         reservation = Rezervasyon(
             rezervasyon_id=rez_id,
@@ -220,9 +230,9 @@ def update_reservation(rez_id, current_user):
 
         # Oda durumlarini guncelle
         if rezervasyon_durumu in [Rezervasyon.DURUM_IPTAL, Rezervasyon.DURUM_TAMAMLANDI]:
-            oda_durum_guncelle(yeni_oda_id, 'bos')
+            oda_durum_guncelle(yeni_oda_id, 'Boş')
         else:
-            oda_durum_guncelle(yeni_oda_id, 'dolu')
+            oda_durum_guncelle(yeni_oda_id, 'Dolu')
 
         updated = Rezervasyon.from_dict({**field_map, 'rezervasyon_id': rez_id, 'olusturulma_tarihi': current.get('olusturulma_tarihi')})
         return jsonify(updated.to_dict()), 200
@@ -258,7 +268,7 @@ def delete_reservation(rez_id, current_user):
         execute_query(delete_query, params=(rez_id,), fetch=False)
 
         # Odayi bos yap
-        oda_durum_guncelle(current['oda_id'], 'bos')
+        oda_durum_guncelle(current['oda_id'], 'Boş')
 
         return jsonify({'message': 'Rezervasyon silindi'}), 200
     except Exception as e:

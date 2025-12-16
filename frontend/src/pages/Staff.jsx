@@ -7,6 +7,8 @@ function Staff() {
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingStaff, setEditingStaff] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
   const [formData, setFormData] = useState({
     kullanici_adi: '',
     sifre: '',
@@ -103,6 +105,32 @@ function Staff() {
         >
           Yeni Personel Ekle
         </button>
+      </div>
+
+      {/* Arama ve Filtre */}
+      <div className="mb-6 p-4 bg-white rounded-lg shadow">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Ad Soyad veya Kullanıcı Adı Ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="">Tüm Durumlar</option>
+              <option value="true">Aktif</option>
+              <option value="false">Pasif</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -207,7 +235,14 @@ function Staff() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {staff.map((staffMember) => (
+              {staff
+                .filter((staffMember) => {
+                  const matchSearch = staffMember.ad_soyad.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                    staffMember.kullanici_adi.toLowerCase().includes(searchTerm.toLowerCase())
+                  const matchStatus = !filterStatus || (filterStatus === 'true' ? staffMember.aktiflik == 1 : staffMember.aktiflik == 0)
+                  return matchSearch && matchStatus
+                })
+                .map((staffMember) => (
                 <tr key={staffMember.personel_id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     {staffMember.kullanici_adi}
@@ -247,7 +282,12 @@ function Staff() {
               ))}
             </tbody>
           </table>
-          {staff.length === 0 && (
+          {staff.filter((staffMember) => {
+            const matchSearch = staffMember.ad_soyad.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                              staffMember.kullanici_adi.toLowerCase().includes(searchTerm.toLowerCase())
+            const matchStatus = !filterStatus || staffMember.aktiflik.toString() === filterStatus
+            return matchSearch && matchStatus
+          }).length === 0 && (
             <div className="p-6 text-center text-gray-500">Kayıt bulunamadı</div>
           )}
         </div>

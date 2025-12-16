@@ -53,19 +53,21 @@ function Reports() {
                     <th className="px-3 py-2 text-left">Ay</th>
                     <th className="px-3 py-2 text-left">Gelir</th>
                     <th className="px-3 py-2 text-left">Rezervasyon Sayısı</th>
+                    <th className="px-3 py-2 text-left">Ödeme Türü</th>
                   </tr>
                 </thead>
                 <tbody>
                   {monthly.map((m, idx) => (
                     <tr key={idx} className="border-t">
-                      <td className="px-3 py-2">{m.ay}</td>
-                      <td className="px-3 py-2">{m.toplam_gelir || m.gelir || 0} ₺</td>
-                      <td className="px-3 py-2">{m.rezervasyon_sayisi || '-'}</td>
+                      <td className="px-3 py-2">{m.Donem || '-'}</td>
+                      <td className="px-3 py-2">{m.Toplam_Kazanc || 0} ₺</td>
+                      <td className="px-3 py-2">{m.Islem_Sayisi || '-'}</td>
+                      <td className="px-3 py-2">{m.odeme_turu || '-'}</td>
                     </tr>
                   ))}
                   {monthly.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-3 py-4 text-center text-gray-500">
+                      <td colSpan={4} className="px-3 py-4 text-center text-gray-500">
                         Kayıt bulunamadı.
                       </td>
                     </tr>

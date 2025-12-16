@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { odaService } from '../services/odaService'
 
 const statusColors = {
-  bos: 'bg-green-100 text-green-800',
-  dolu: 'bg-red-100 text-red-800',
-  tadilat: 'bg-yellow-100 text-yellow-800',
+  'Boş': 'bg-green-100 text-green-800',
+  'Dolu': 'bg-red-100 text-red-800',
+  'Tadilat': 'bg-yellow-100 text-yellow-800',
 }
 
 function Rooms() {
@@ -13,12 +13,27 @@ function Rooms() {
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingRoom, setEditingRoom] = useState(null)
+  const [roomTypes, setRoomTypes] = useState([])
+  const [roomStatuses, setRoomStatuses] = useState([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterType, setFilterType] = useState('')
   const [formData, setFormData] = useState({
     oda_no: '',
     tip: '',
     fiyat: '',
-    durum: 'bos',
+    durum: 'Boş',
   })
+
+  const fetchRoomOptions = async () => {
+    try {
+      const res = await odaService.getOptions()
+      setRoomTypes(res.data?.types || [])
+      setRoomStatuses(res.data?.statuses || [])
+    } catch (err) {
+      console.error('Seçenekler yüklenemedi:', err)
+    }
+  }
 
   const fetchRooms = async () => {
     setLoading(true)
@@ -34,6 +49,7 @@ function Rooms() {
   }
 
   useEffect(() => {
+    fetchRoomOptions()
     fetchRooms()
   }, [])
 
@@ -48,7 +64,7 @@ function Rooms() {
       }
       setShowForm(false)
       setEditingRoom(null)
-      setFormData({ oda_no: '', tip: '', fiyat: '', durum: 'bos' })
+      setFormData({ oda_no: '', tip: '', fiyat: '', durum: 'Boş' })
       fetchRooms()
     } catch (err) {
       setError(err.response?.data?.error || 'İşlem başarısız')
@@ -93,12 +109,55 @@ function Rooms() {
           onClick={() => {
             setShowForm(true)
             setEditingRoom(null)
-            setFormData({ oda_no: '', tip: '', fiyat: '', durum: 'bos' })
+            setFormData({ oda_no: '', tip: '', fiyat: '', durum: 'Boş' })
           }}
           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         >
           Yeni Oda Ekle
         </button>
+      </div>
+
+      {/* Arama ve Filtre */}
+      <div className="mb-6 p-4 bg-white rounded-lg shadow space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <input
+              type="text"
+              placeholder="Oda No veya Tip Ara..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+            />
+          </div>
+          <div>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="">Tüm Tipler</option>
+              {roomTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-3 py-2 border rounded"
+            >
+              <option value="">Tüm Durumlar</option>
+              {roomStatuses.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {error && (
@@ -124,13 +183,19 @@ function Rooms() {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Tip</label>
-                <input
-                  type="text"
+                <select
                   required
                   value={formData.tip}
                   onChange={(e) => setFormData({ ...formData, tip: e.target.value })}
                   className="w-full px-3 py-2 border rounded"
-                />
+                >
+                  <option value="">Seç...</option>
+                  {roomTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Fiyat</label>
@@ -150,9 +215,11 @@ function Rooms() {
                   onChange={(e) => setFormData({ ...formData, durum: e.target.value })}
                   className="w-full px-3 py-2 border rounded"
                 >
-                  <option value="bos">Boş</option>
-                  <option value="dolu">Dolu</option>
-                  <option value="tadilat">Tadilat</option>
+                  {roomStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -193,7 +260,14 @@ function Rooms() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {rooms.map((room) => (
+              {rooms
+                .filter((room) => {
+                  const matchSearch = room.oda_no.toString().includes(searchTerm) || room.tip.toLowerCase().includes(searchTerm.toLowerCase())
+                  const matchType = !filterType || room.tip === filterType
+                  const matchStatus = !filterStatus || room.durum === filterStatus
+                  return matchSearch && matchType && matchStatus
+                })
+                .map((room) => (
                 <tr key={room.oda_id}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{room.oda_no}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{room.tip}</td>
@@ -204,9 +278,11 @@ function Rooms() {
                       onChange={(e) => handleStatusChange(room.oda_id, e.target.value)}
                       className={`text-xs px-2 py-1 rounded ${statusColors[room.durum] || 'bg-gray-100'}`}
                     >
-                      <option value="bos">Boş</option>
-                      <option value="dolu">Dolu</option>
-                      <option value="tadilat">Tadilat</option>
+                      {roomStatuses.map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
                     </select>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">

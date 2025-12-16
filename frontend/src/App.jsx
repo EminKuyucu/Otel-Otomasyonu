@@ -5,11 +5,13 @@ import Login from './pages/Login'
 import Rooms from './pages/Rooms'
 import Customers from './pages/Customers'
 import Staff from './pages/Staff'
+import Reservations from './pages/Reservations'
 import ReservationCreate from './pages/ReservationCreate'
 import Stock from './pages/Stock'
 import Services from './pages/Services'
 import Payments from './pages/Payments'
 import Reports from './pages/Reports'
+import Dashboard from './pages/Dashboard'
 import PrivateRoute from './components/PrivateRoute'
 
 function App() {
@@ -20,10 +22,11 @@ function App() {
         <Route element={<PrivateRoute />}>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/rooms" element={<Rooms />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/staff" element={<Staff />} />
+            <Route path="/reservations" element={<Reservations />} />
             <Route path="/reservations/new" element={<ReservationCreate />} />
             <Route path="/stock" element={<Stock />} />
             <Route path="/services" element={<Services />} />

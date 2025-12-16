@@ -9,19 +9,24 @@ load_dotenv()
 
 app = Flask(__name__)
 
+# Trailing slash gerektirmeme
+app.url_map.strict_slashes = False
+
 # CORS ayarları
 CORS(app, resources={
     r"/api/*": {
         "origins": "*",
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Origin"],
+        "expose_headers": ["Access-Control-Allow-Origin"],
+        "supports_credentials": False
     }
 })
 
 # Veritabanı bağlantı ayarları
 app.config['DATABASE_URI'] = os.getenv(
     'DATABASE_URI',
-    'mysql://root:password@localhost/otel_otomasyonu_pro'
+    'mysql://root:13524qwe@localhost/otel_otomasyonu_pro'
 )
 
 # Veritabanı bağlantısını başlat
@@ -38,6 +43,7 @@ atexit.register(close_connection)
 from routes.auth_routes import bp as auth_bp
 from routes.oda_routes import bp as rooms_bp
 from routes.musteri_routes import bp as customers_bp
+from routes.personel_routes import bp as staff_bp
 from routes.rezervasyon_routes import bp as reservations_bp
 from routes.stok_routes import bp as stock_bp
 from routes.hizmet_routes import bp as services_bp
@@ -48,6 +54,7 @@ from routes.report_routes import bp as reports_bp
 app.register_blueprint(auth_bp)
 app.register_blueprint(rooms_bp)
 app.register_blueprint(customers_bp)
+app.register_blueprint(staff_bp)
 app.register_blueprint(reservations_bp)
 app.register_blueprint(stock_bp)
 app.register_blueprint(services_bp)

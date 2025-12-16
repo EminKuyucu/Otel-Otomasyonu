@@ -5,10 +5,10 @@ from typing import Optional, Dict, Any
 class Rezervasyon:
     """Rezervasyon modeli - PyMySQL tabanli"""
 
-    DURUM_BEKLIYOR = 'bekliyor'
-    DURUM_AKTIF = 'aktif'
-    DURUM_TAMAMLANDI = 'tamamlandi'
-    DURUM_IPTAL = 'iptal'
+    DURUM_BEKLIYOR = 'Bekliyor'
+    DURUM_AKTIF = 'Aktif'
+    DURUM_TAMAMLANDI = 'Tamamlandı'
+    DURUM_IPTAL = 'İptal'
 
     DURUM_CHOICES = [DURUM_BEKLIYOR, DURUM_AKTIF, DURUM_TAMAMLANDI, DURUM_IPTAL]
 
@@ -63,7 +63,12 @@ class Rezervasyon:
             'yetiskin_sayisi': self.yetiskin_sayisi,
             'cocuk_sayisi': self.cocuk_sayisi,
             'toplam_ucret': self.toplam_ucret,
-            'rezervasyon_durumu': self.rezervasyon_durumu,
+            'rezervasyon_durumu': {
+                'bekliyor': 'Bekliyor',
+                'aktif': 'Aktif',
+                'tamamlandi': 'Tamamlandı',
+                'iptal': 'İptal'
+            }.get(self.rezervasyon_durumu, self.rezervasyon_durumu),
             'olusturulma_tarihi': self.olusturulma_tarihi.isoformat() if self.olusturulma_tarihi else None
         }
 

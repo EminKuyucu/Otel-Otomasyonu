@@ -4,31 +4,84 @@ from typing import Optional, Dict, Any
 class Oda:
     """Oda modeli - PyMySQL tabanlı"""
 
-    DURUM_BOS = 'bos'
-    DURUM_DOLU = 'dolu'
-    DURUM_TADILAT = 'tadilat'
-
+    # Durum sabitlikleri
+    DURUM_BOS = 'Boş'
+    DURUM_DOLU = 'Dolu'
+    DURUM_TADILAT = 'Tadilat'
     DURUM_CHOICES = [DURUM_BOS, DURUM_DOLU, DURUM_TADILAT]
 
-    def __init__(self, oda_id: Optional[int] = None, oda_no: str = "",
-                 tip: str = "", fiyat: float = 0.0, durum: str = DURUM_BOS,
-                 olusturulma_tarihi: Optional[datetime] = None):
+    # Oda tipi sabitlikleri
+    TIPO_STANDART = 'Standart'
+    TIPO_DELUXE = 'Deluxe'
+    TIPO_SUITE = 'Suite'
+    TIPO_VIPUITE = 'VIP Suite'
+    TIPO_ENGELLI_ODASI = 'Engelli Odası'
+    TIPO_SINGLE_ECONOMY = 'Single Economy'
+    TIPO_AILE = 'Aile'
+    TIPO_CONNECTION_ROOM = 'Connection Room'
+    TIPO_CORNER_SUIT = 'Corner Suit'
+    TIPO_BALAYI_SUITI = 'Balayı Suiti'
+    TIPO_PENTHOUSE = 'Penthouse'
+    TIPO_KRAL_DAIRESI = 'Kral Dairesi'
+    TIPO_CHOICES = [TIPO_STANDART, TIPO_DELUXE, TIPO_SUITE, TIPO_VIPUITE, TIPO_ENGELLI_ODASI, TIPO_SINGLE_ECONOMY, TIPO_AILE, TIPO_CONNECTION_ROOM, TIPO_CORNER_SUIT, TIPO_BALAYI_SUITI, TIPO_PENTHOUSE, TIPO_KRAL_DAIRESI]
+
+    def __init__(self, oda_id: Optional[int] = None, oda_numarasi: str = "",
+                 oda_tipi: str = "", ucret_gecelik: float = 0.0, durum: str = DURUM_BOS,
+                 manzara: str = "", olusturulma_tarihi: Optional[datetime] = None):
         self.oda_id = oda_id
-        self.oda_no = oda_no
-        self.tip = tip
-        self.fiyat = fiyat
+        self.oda_numarasi = oda_numarasi
+        self.oda_tipi = oda_tipi
+        self.ucret_gecelik = ucret_gecelik
         self.durum = durum
+        self.manzara = manzara
         self.olusturulma_tarihi = olusturulma_tarihi or datetime.utcnow()
+
+    # Frontend uyumluluğu için properties
+    @property
+    def oda_no(self):
+        return self.oda_numarasi
+    
+    @oda_no.setter
+    def oda_no(self, value):
+        self.oda_numarasi = value
+    
+    @property
+    def tip(self):
+        return self.oda_tipi
+    
+    @tip.setter
+    def tip(self, value):
+        self.oda_tipi = value
+    
+    @property
+    def fiyat(self):
+        return self.ucret_gecelik
+    
+    @fiyat.setter
+    def fiyat(self, value):
+        self.ucret_gecelik = value
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'Oda':
         """Dictionary'den Oda objesi oluşturur"""
+        # Frontend/routes alanlarını (oda_no, tip, fiyat) destekle
+        oda_no = data.get('oda_no') or data.get('oda_numarasi', '')
+        tip = data.get('tip') or data.get('oda_tipi', '')
+        fiyat = data.get('fiyat') or data.get('ucret_gecelik', 0.0)
+        
+        # Fiyatı float'a dönüştür
+        try:
+            fiyat = float(fiyat) if fiyat else 0.0
+        except (ValueError, TypeError):
+            fiyat = 0.0
+        
         return cls(
             oda_id=data.get('oda_id'),
-            oda_no=data.get('oda_no', ''),
-            tip=data.get('tip', ''),
-            fiyat=data.get('fiyat', 0.0),
+            oda_numarasi=oda_no,
+            oda_tipi=tip,
+            ucret_gecelik=fiyat,
             durum=data.get('durum', cls.DURUM_BOS),
+            manzara=data.get('manzara', ''),
             olusturulma_tarihi=data.get('olusturulma_tarihi')
         )
 
@@ -36,10 +89,11 @@ class Oda:
         """Objeyi dictionary'e çevirir"""
         return {
             'oda_id': self.oda_id,
-            'oda_no': self.oda_no,
-            'tip': self.tip,
-            'fiyat': self.fiyat,
+            'oda_no': self.oda_numarasi,
+            'tip': self.oda_tipi,
+            'fiyat': self.ucret_gecelik,
             'durum': self.durum,
+            'manzara': self.manzara,
             'olusturulma_tarihi': self.olusturulma_tarihi.isoformat() if self.olusturulma_tarihi else None
         }
 
@@ -58,4 +112,8 @@ class Oda:
     def validate_status(self, status: str) -> bool:
         """Durum değerinin geçerli olup olmadığını kontrol eder"""
         return status in self.DURUM_CHOICES
+
+    def validate_type(self, tipo: str) -> bool:
+        """Oda tipi değerinin geçerli olup olmadığını kontrol eder"""
+        return tipo in self.TIPO_CHOICES
 

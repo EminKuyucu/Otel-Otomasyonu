@@ -5,6 +5,7 @@ function Payments() {
   const [payments, setPayments] = useState([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
 
   const fetchPayments = async () => {
     setLoading(true)
@@ -34,6 +35,18 @@ function Payments() {
           Yenile
         </button>
       </div>
+
+      {/* Arama */}
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Ödeme ID, Rezervasyon ID, Müşteri ID veya Ödeme Türü Ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-3 py-2 border rounded"
+        />
+      </div>
+
       {error && <p className="text-red-600 mb-3 text-sm">{error}</p>}
       {loading ? (
         <p>Yükleniyor...</p>
@@ -51,7 +64,16 @@ function Payments() {
               </tr>
             </thead>
             <tbody>
-              {payments.map((p) => (
+              {payments
+                .filter((p) => {
+                  const matchSearch = 
+                    p.odeme_id.toString().includes(searchTerm) ||
+                    p.rezervasyon_id.toString().includes(searchTerm) ||
+                    p.musteri_id.toString().includes(searchTerm) ||
+                    p.odeme_turu.toLowerCase().includes(searchTerm.toLowerCase())
+                  return matchSearch
+                })
+                .map((p) => (
                 <tr key={p.odeme_id} className="border-t">
                   <td className="px-3 py-2">{p.odeme_id}</td>
                   <td className="px-3 py-2">{p.rezervasyon_id}</td>

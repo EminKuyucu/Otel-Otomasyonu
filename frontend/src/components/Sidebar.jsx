@@ -5,6 +5,7 @@ const links = [
   { to: '/rooms', label: 'Odalar' },
   { to: '/customers', label: 'Müşteriler' },
   { to: '/staff', label: 'Personel' },
+  { to: '/reservations', label: 'Rezervasyonlar' },
   { to: '/reservations/new', label: 'Rezervasyon Oluştur' },
   { to: '/stock', label: 'Stok' },
   { to: '/services', label: 'Ekstra Hizmetler' },

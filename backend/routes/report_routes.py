@@ -10,7 +10,7 @@ bp = Blueprint('reports', __name__, url_prefix='/api/reports')
 def monthly_report(current_user):
     """Aylık kazanç raporu (MySQL view: monthly_report_view)"""
     try:
-        query = "SELECT * FROM monthly_report_view ORDER BY ay DESC"
+        query = "SELECT * FROM aylik_kazanc_raporu ORDER BY Donem DESC"
         result = execute_query(query, fetch=True)
         return jsonify(result), 200
     except Exception as e:
@@ -22,7 +22,7 @@ def monthly_report(current_user):
 def reservation_report(current_user):
     """Detaylı rezervasyon raporu (MySQL view: reservation_report_view)"""
     try:
-        query = "SELECT * FROM reservation_report_view ORDER BY giris_tarihi DESC"
+        query = "SELECT * FROM detayli_rezervasyon_raporu ORDER BY giris_tarihi DESC"
         result = execute_query(query, fetch=True)
         return jsonify(result), 200
     except Exception as e:

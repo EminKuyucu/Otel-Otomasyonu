@@ -78,10 +78,10 @@ def init_database(app=None):
     
     try:
         # Veritabanı bağlantı bilgilerini al
+        database_uri = os.getenv('DATABASE_URI', 'mysql://root:13524qwe@localhost/otel_otomasyonu_pro')
+        
         if app:
-            database_uri = app.config.get('DATABASE_URI')
-        else:
-            database_uri = os.getenv('DATABASE_URI', 'mysql://root:password@localhost/otel_otomasyonu_pro')
+            app.config['DATABASE_URI'] = database_uri
         
         if not database_uri:
             raise ValueError("DATABASE_URI konfigürasyonu bulunamadı")
@@ -216,10 +216,10 @@ def execute_many(query: str, params_list: List[Tuple]) -> int:
             with conn.cursor() as cursor:
                 cursor.executemany(query, params_list)
                 return cursor.rowcount
-    except Exception as e:
+        except Exception as e:
             conn.rollback()
             logging.error(f"Çoklu sorgu çalıştırma hatası: {str(e)}")
-        raise
+            raise
 
 
 def test_connection() -> Tuple[bool, str]:
@@ -237,7 +237,7 @@ def test_connection() -> Tuple[bool, str]:
         result = execute_query("SELECT 1 as test", fetch=True)
         
         if result and len(result) > 0:
-        return True, "Veritabanı bağlantısı başarılı"
+            return True, "Veritabanı bağlantısı başarılı"
         else:
             return False, "Veritabanı sorgu hatası"
         
