@@ -90,6 +90,17 @@ export const odaService = {
       console.error('Oda silinirken hata:', error)
       throw error
     }
+  },
+
+  // Odanın özelliklerini getir (yeni endpoint)
+  getOzellikler: async (odaId) => {
+    try {
+      const response = await api.get(`/odalar/${odaId}/ozellikler`)
+      return response
+    } catch (error) {
+      console.error('Oda özellikleri alınırken hata:', error)
+      throw error
+    }
   }
 }
 

@@ -127,8 +127,8 @@ def create_reservation(current_user):
         # Rezervasyon ekle
         insert_query = """
         INSERT INTO rezervasyonlar
-        (musteri_id, oda_id, giris_tarihi, cikis_tarihi, yetiskin_sayisi, cocuk_sayisi, toplam_ucret, rezervasyon_durumu, olusturulma_tarihi)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW())
+        (musteri_id, oda_id, giris_tarihi, cikis_tarihi, yetiskin_sayisi, cocuk_sayisi, toplam_ucret, rezervasyon_tipi, rezervasyon_durumu, olusturulma_tarihi)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, NOW())
         """
         execute_query(insert_query, params=(
             data['musteri_id'],
@@ -138,6 +138,7 @@ def create_reservation(current_user):
             data.get('yetiskin_sayisi', 1),
             data.get('cocuk_sayisi', 0),
             toplam_ucret,
+            data.get('rezervasyon_tipi', 'Online'),
             Rezervasyon.DURUM_AKTIF
         ), fetch=False)
 
@@ -273,3 +274,95 @@ def delete_reservation(rez_id, current_user):
         return jsonify({'message': 'Rezervasyon silindi'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+
+@bp.route('/<int:rezervasyon_id>/degerlendirme', methods=['GET'])
+@token_required
+def get_rezervasyon_degerlendirme(rezervasyon_id, current_user):
+    """Rezervasyon degerlendirmesini getir"""
+    try:
+        # Rezervasyon var mı kontrol et
+        check_query = "SELECT rezervasyon_id, musteri_id FROM rezervasyonlar WHERE rezervasyon_id = %s"
+        existing = execute_query(check_query, params=(rezervasyon_id,), fetch=True)
+        if not existing:
+            return jsonify({'error': 'Rezervasyon bulunamadi'}), 404
+
+        # Değerlendirme var mı kontrol et
+        query = """
+        SELECT degerlendirme_id, rezervasyon_id, puan, yorum
+        FROM musteri_degerlendirme
+        WHERE rezervasyon_id = %s
+        """
+        result = execute_query(query, params=(rezervasyon_id,), fetch=True)
+
+        if result:
+            return jsonify(result[0]), 200
+        else:
+            return jsonify({'message': 'Degerlendirme bulunamadi'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/<int:rezervasyon_id>/degerlendirme', methods=['POST'])
+@token_required
+def create_rezervasyon_degerlendirme(rezervasyon_id, current_user):
+    """Rezervasyon icin degerlendirme olustur"""
+    try:
+        data = request.get_json()
+
+        # Rezervasyon var mı kontrol et
+        check_query = "SELECT rezervasyon_id, musteri_id FROM rezervasyonlar WHERE rezervasyon_id = %s"
+        existing = execute_query(check_query, params=(rezervasyon_id,), fetch=True)
+        if not existing:
+            return jsonify({'error': 'Rezervasyon bulunamadi'}), 404
+
+        # Zaten değerlendirme var mı kontrol et
+        existing_review_query = "SELECT degerlendirme_id FROM musteri_degerlendirme WHERE rezervasyon_id = %s"
+        existing_review = execute_query(existing_review_query, params=(rezervasyon_id,), fetch=True)
+        if existing_review:
+            return jsonify({'error': 'Bu rezervasyon icin zaten degerlendirme mevcut'}), 400
+
+        # Değerlendirme oluştur
+        insert_query = """
+        INSERT INTO musteri_degerlendirme (rezervasyon_id, puan, yorum)
+        VALUES (%s, %s, %s)
+        """
+        execute_query(insert_query, params=(
+            rezervasyon_id,
+            data.get('puan'),
+            data.get('yorum', '')
+        ), fetch=False)
+
+        return jsonify({'message': 'Degerlendirme olusturuldu'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/<int:rezervasyon_id>/degerlendirme', methods=['PUT'])
+@token_required
+def update_rezervasyon_degerlendirme(rezervasyon_id, current_user):
+    """Rezervasyon degerlendirmesini guncelle"""
+    try:
+        data = request.get_json()
+
+        # Değerlendirme var mı kontrol et
+        check_query = "SELECT degerlendirme_id FROM musteri_degerlendirme WHERE rezervasyon_id = %s"
+        existing = execute_query(check_query, params=(rezervasyon_id,), fetch=True)
+        if not existing:
+            return jsonify({'error': 'Degerlendirme bulunamadi'}), 404
+
+        # Değerlendirme güncelle
+        update_query = """
+        UPDATE musteri_degerlendirme
+        SET puan = %s, yorum = %s
+        WHERE rezervasyon_id = %s
+        """
+        execute_query(update_query, params=(
+            data.get('puan'),
+            data.get('yorum', ''),
+            rezervasyon_id
+        ), fetch=False)
+
+        return jsonify({'message': 'Degerlendirme guncellendi'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

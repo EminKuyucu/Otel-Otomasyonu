@@ -1,5 +1,6 @@
-import React from 'react'
-import { Bed, Eye, DollarSign } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Bed, Eye, DollarSign, Home, Wifi, Coffee, Car } from 'lucide-react'
+import { odaService } from '../services/odaService'
 
 // Manzara bilgisine göre görsel URL'leri (Pixabay'den ücretsiz görseller)
 const getManzaraImage = (manzara) => {
@@ -43,9 +44,30 @@ const getStatusColor = (durum) => {
 }
 
 const RoomCard = ({ room, onClick }) => {
+  const [ozellikler, setOzellikler] = useState([])
+  const [ozelliklerLoading, setOzelliklerLoading] = useState(false)
+
   const statusColor = getStatusColor(room.durum)
   const manzaraStyle = getManzaraStyle(room.manzara)
   const manzaraImage = getManzaraImage(room.manzara)
+
+  useEffect(() => {
+    const loadOzellikler = async () => {
+      if (room.oda_id) {
+        setOzelliklerLoading(true)
+        try {
+          const res = await odaService.getOzellikler(room.oda_id)
+          setOzellikler(res.data.ozellikler || [])
+        } catch (err) {
+          console.error('Oda özellikleri yüklenemedi:', err)
+        } finally {
+          setOzelliklerLoading(false)
+        }
+      }
+    }
+
+    loadOzellikler()
+  }, [room.oda_id])
 
   return (
     <div
@@ -122,15 +144,57 @@ const RoomCard = ({ room, onClick }) => {
           </div>
         </div>
 
-        {/* Manzara ve Fiyat */}
-        <div className="flex justify-between items-center text-sm text-gray-600">
+        {/* Oda Bilgileri Grid */}
+        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-2">
           <div className="flex items-center">
-            <Eye className="w-4 h-4 mr-1" />
+            <Eye className="w-3 h-3 mr-1" />
             <span>{room.manzara || 'Manzara Yok'}</span>
           </div>
-          <div className="flex items-center font-semibold text-gray-900">
+          <div className="flex items-center">
+            <Home className="w-3 h-3 mr-1" />
+            <span>{room.metrekare || 0} m²</span>
+          </div>
+        </div>
+
+        {/* Oda Özellikleri */}
+        {ozelliklerLoading ? (
+          <div className="flex items-center text-xs text-gray-500 mb-2">
+            <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"></div>
+            Özellikler yükleniyor...
+          </div>
+        ) : ozellikler.length > 0 ? (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {ozellikler.slice(0, 3).map((ozellik, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-1.5 py-0.5 text-xs bg-gray-100 text-gray-700 rounded"
+                title={ozellik}
+              >
+                {ozellik === 'Wi-Fi' && <Wifi className="w-2.5 h-2.5 mr-0.5" />}
+                {ozellik === 'Klima' && <Home className="w-2.5 h-2.5 mr-0.5" />}
+                {ozellik === 'Kahvaltı' && <Coffee className="w-2.5 h-2.5 mr-0.5" />}
+                {ozellik === 'Otopark' && <Car className="w-2.5 h-2.5 mr-0.5" />}
+                {!['Wi-Fi', 'Klima', 'Kahvaltı', 'Otopark'].includes(ozellik) && (
+                  <span className="w-2.5 h-2.5 mr-0.5 rounded-full bg-gray-400"></span>
+                )}
+                <span className="truncate max-w-12">{ozellik}</span>
+              </span>
+            ))}
+            {ozellikler.length > 3 && (
+              <span className="inline-flex items-center px-1.5 py-0.5 text-xs bg-gray-100 text-gray-500 rounded">
+                +{ozellikler.length - 3}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-400 mb-2">Özellik bilgisi yok</div>
+        )}
+
+        {/* Fiyat */}
+        <div className="flex justify-end">
+          <div className="flex items-center font-semibold text-gray-900 text-sm">
             <DollarSign className="w-4 h-4 mr-1" />
-            <span>{room.fiyat} ₺</span>
+            <span>{room.fiyat} ₺/gün</span>
           </div>
         </div>
       </div>

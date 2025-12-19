@@ -7,6 +7,10 @@ export const rezervasyonService = {
   create: (data) => api.post('/reservations/', data),
   update: (id, data) => api.put(`/reservations/${id}/`, data),
   delete: (id) => api.delete(`/reservations/${id}/`),
+  // Değerlendirme işlemleri
+  getDegerlendirme: (id) => api.get(`/reservations/${id}/degerlendirme`),
+  createDegerlendirme: (id, data) => api.post(`/reservations/${id}/degerlendirme`, data),
+  updateDegerlendirme: (id, data) => api.put(`/reservations/${id}/degerlendirme`, data),
 }
 
 

@@ -198,7 +198,7 @@ def update_room(room_id, current_user):
         # Güncelleme query'si oluştur
         update_fields = []
         params = []
-        field_mapping = {'oda_no': 'oda_numarasi', 'tip': 'oda_tipi', 'fiyat': 'ucret_gecelik', 'durum': 'durum', 'manzara': 'manzara'}
+        field_mapping = {'oda_no': 'oda_numarasi', 'tip': 'oda_tipi', 'fiyat': 'ucret_gecelik', 'durum': 'durum', 'manzara': 'manzara', 'metrekare': 'metrekare'}
         
         for key, value in data.items():
             if key in field_mapping:
@@ -215,7 +215,7 @@ def update_room(room_id, current_user):
         execute_query(update_query, params=params, fetch=False)
 
         # Güncellenmiş odayı getir
-        select_query = "SELECT oda_id, oda_numarasi, oda_tipi, manzara, ucret_gecelik, durum FROM odalar WHERE oda_id = %s"
+        select_query = "SELECT oda_id, oda_numarasi, oda_tipi, manzara, metrekare, ucret_gecelik, durum FROM odalar WHERE oda_id = %s"
         results = execute_query(select_query, params=(room_id,), fetch=True)
         oda = Oda.from_dict(results[0])
 
@@ -250,7 +250,7 @@ def update_room_status(room_id, current_user):
         execute_query(update_query, params=(yeni_durum, room_id), fetch=False)
 
         # Güncellenmiş odayı getir
-        select_query = "SELECT oda_id, oda_numarasi, oda_tipi, manzara, ucret_gecelik, durum FROM odalar WHERE oda_id = %s"
+        select_query = "SELECT oda_id, oda_numarasi, oda_tipi, manzara, metrekare, ucret_gecelik, durum FROM odalar WHERE oda_id = %s"
         results = execute_query(select_query, params=(room_id,), fetch=True)
         oda = Oda.from_dict(results[0])
 
@@ -292,7 +292,7 @@ def delete_room(room_id, current_user):
 def get_odalar(current_user):
     """Tüm odaları getir (Frontend uyumluluğu için)"""
     try:
-        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, ucret_gecelik as fiyat, durum FROM odalar ORDER BY oda_numarasi"
+        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, metrekare, ucret_gecelik as fiyat, durum FROM odalar ORDER BY oda_numarasi"
         results = execute_query(query, fetch=True)
 
         odalar = []
@@ -332,7 +332,7 @@ def get_odalar(current_user):
 def get_oda_by_id(oda_id, current_user):
     """Tek bir oda detayını getir"""
     try:
-        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, ucret_gecelik as fiyat, durum FROM odalar WHERE oda_id = %s"
+        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, metrekare, ucret_gecelik as fiyat, durum FROM odalar WHERE oda_id = %s"
         results = execute_query(query, params=(oda_id,), fetch=True)
 
         if not results:
@@ -365,13 +365,14 @@ def create_oda(current_user):
 
         # Veritabanına ekle
         query = """
-            INSERT INTO odalar (oda_numarasi, oda_tipi, manzara, ucret_gecelik, durum)
-            VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO odalar (oda_numarasi, oda_tipi, manzara, metrekare, ucret_gecelik, durum)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """
         execute_query(query, params=(
             data['oda_no'],
             data['tip'],
             data.get('manzara', 'Yok'),
+            data.get('metrekare', None),
             float(data['fiyat']),
             data['durum']
         ), fetch=False)
@@ -409,5 +410,25 @@ def update_oda(oda_id, current_user):
         ), fetch=False)
 
         return jsonify({'message': 'Oda başarıyla güncellendi'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@bp_odalar.route('/<int:oda_id>/ozellikler', methods=['GET'])
+@token_required
+def get_oda_ozellikler(oda_id, current_user):
+    """Bir odanın özelliklerini getir"""
+    try:
+        query = """
+        SELECT o.ozellik_adi
+        FROM oda_ozellikleri o
+        JOIN oda_ozellik_baglanti ob ON o.ozellik_id = ob.ozellik_id
+        WHERE ob.oda_id = %s
+        ORDER BY o.ozellik_adi
+        """
+        results = execute_query(query, params=(oda_id,), fetch=True)
+
+        ozellikler = [row['ozellik_adi'] for row in results]
+        return jsonify({'ozellikler': ozellikler}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500

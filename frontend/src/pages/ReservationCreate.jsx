@@ -11,6 +11,7 @@ function ReservationCreate() {
     cikis_tarihi: '',
     yetiskin_sayisi: 1,
     cocuk_sayisi: 0,
+    rezervasyon_tipi: 'Online',
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
@@ -142,6 +143,21 @@ function ReservationCreate() {
                 onChange={handleChange}
                 className="mt-1 w-full border rounded-md px-3 py-2"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Rezervasyon Tipi</label>
+              <select
+                name="rezervasyon_tipi"
+                value={form.rezervasyon_tipi}
+                onChange={handleChange}
+                className="mt-1 w-full border rounded-md px-3 py-2"
+                required
+              >
+                <option value="Online">Online</option>
+                <option value="Kapıdan">Kapıdan</option>
+                <option value="Acente">Acente</option>
+                <option value="Ön Rezervasyon">Ön Rezervasyon</option>
+              </select>
             </div>
           </div>
           <button
