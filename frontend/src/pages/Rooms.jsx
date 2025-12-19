@@ -55,10 +55,10 @@ function Rooms() {
     setLoading(true)
     setError('')
     try {
+      // Tüm odaları backend'den getir (filtre için fiyat aralığı hesaplamak için)
       const res = await odaService.getAll()
       const roomList = res.data || []
       setRooms(roomList)
-      setFilteredRooms(roomList)
 
       // Fiyat aralığını hesapla
       if (roomList.length > 0) {
@@ -67,8 +67,36 @@ function Rooms() {
         const maxPrice = Math.max(...prices)
         setPriceRange([minPrice, maxPrice])
       }
+
+      // Başlangıçta tüm odaları göster
+      setFilteredRooms(roomList)
     } catch (err) {
       setError(err.response?.data?.error || 'Odalar yüklenemedi')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchFilteredRooms = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      // Tüm filtreleri backend'e gönder
+      const filters = {
+        durum: filterStatus,
+        oda_tipi: filterType,
+        minFiyat: priceRange[0],
+        maxFiyat: priceRange[1],
+        arama: searchTerm || null
+      }
+
+      const res = await odaService.getFiltered(filters)
+      const filteredRoomList = res.data || []
+      setFilteredRooms(filteredRoomList)
+    } catch (err) {
+      setError(err.response?.data?.error || 'Filtreleme sırasında hata oluştu')
+      // Hata durumunda boş liste göster
+      setFilteredRooms([])
     } finally {
       setLoading(false)
     }
@@ -89,23 +117,10 @@ function Rooms() {
     fetchCustomers()
   }, [])
 
-  // Filtreleme işlemi
+  // Tüm filtreleme işlemlerini backend'de yap
   useEffect(() => {
-    let filtered = rooms.filter((room) => {
-      const matchSearch = !searchTerm ||
-        room.oda_no.toString().includes(searchTerm) ||
-        room.tip.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        room.manzara?.toLowerCase().includes(searchTerm.toLowerCase())
-
-      const matchType = !filterType || room.tip === filterType
-      const matchStatus = !filterStatus || room.durum === filterStatus
-      const matchPrice = parseFloat(room.fiyat) >= priceRange[0] && parseFloat(room.fiyat) <= priceRange[1]
-
-      return matchSearch && matchType && matchStatus && matchPrice
-    })
-
-    setFilteredRooms(filtered)
-  }, [rooms, searchTerm, filterType, filterStatus, priceRange])
+    fetchFilteredRooms()
+  }, [filterType, filterStatus, priceRange, searchTerm])
 
 
   const handleDelete = async (id) => {
@@ -270,12 +285,16 @@ function Rooms() {
               className="w-full px-3 py-2 border rounded"
             >
               <option value="">Tüm Tipler</option>
-              <option value="Standart">🛏️ Standart</option>
-              <option value="Deluxe">🏰 Deluxe</option>
-              <option value="Suit">🏰 Suit</option>
-              <option value="VIP">👑 VIP</option>
-              <option value="King">👑 King</option>
-              <option value="Queen">👑 Queen</option>
+              <option value="Standart">Standart</option>
+              <option value="Engelli Odası">Engelli Odası</option>
+              <option value="Single Economy">Single Economy</option>
+              <option value="Deluxe">Deluxe</option>
+              <option value="Aile">Aile</option>
+              <option value="Connection Room">Connection Room</option>
+              <option value="Corner Suit">Corner Suit</option>
+              <option value="Balayı Suiti">Balayı Suiti</option>
+              <option value="Penthouse">Penthouse</option>
+              <option value="Kral Dairesi">Kral Dairesi</option>
             </select>
           </div>
 

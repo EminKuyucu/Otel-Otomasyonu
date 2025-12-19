@@ -254,12 +254,16 @@ const RoomDetail = ({ roomId, isOpen, onClose, onRoomUpdate, isNewRoom = false }
                       className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     >
                       <option value="">🔸 Oda tipi seçin</option>
-                      <option value="Standart">🛏️ Standart</option>
-                      <option value="Deluxe">🏰 Deluxe</option>
-                      <option value="Suit">🏰 Suit</option>
-                      <option value="VIP">👑 VIP</option>
-                      <option value="King">👑 King</option>
-                      <option value="Queen">👑 Queen</option>
+                      <option value="Standart">Standart</option>
+                      <option value="Engelli Odası">Engelli Odası</option>
+                      <option value="Single Economy">Single Economy</option>
+                      <option value="Deluxe">Deluxe</option>
+                      <option value="Aile">Aile</option>
+                      <option value="Connection Room">Connection Room</option>
+                      <option value="Corner Suit">Corner Suit</option>
+                      <option value="Balayı Suiti">Balayı Suiti</option>
+                      <option value="Penthouse">Penthouse</option>
+                      <option value="Kral Dairesi">Kral Dairesi</option>
                     </select>
                   ) : (
                     <div className="px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg">

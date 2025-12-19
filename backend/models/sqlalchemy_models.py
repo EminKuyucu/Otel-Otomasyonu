@@ -53,7 +53,7 @@ class Oda(Base):
 
     oda_id = Column(Integer, primary_key=True, autoincrement=True)
     oda_numarasi = Column(String(10), unique=True, nullable=False)
-    oda_tipi = Column(String(50), nullable=False)
+    oda_tipi = Column(Enum('Tek', 'Çift', 'Suit', 'VIP', 'Standart', 'Deluxe', 'Suite', 'VIP Suite', 'Engelli Odası', 'Single Economy', 'Aile', 'Connection Room', 'Corner Suit', 'Balayı Suiti', 'Penthouse', 'Kral Dairesi'), nullable=False)
     manzara = Column(String(50))
     metrekare = Column(Integer)
     ucret_gecelik = Column(DECIMAL(10, 2), nullable=False)

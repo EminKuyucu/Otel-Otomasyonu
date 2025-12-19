@@ -4,10 +4,37 @@ export const odaService = {
   // Tüm odaları getir
   getAll: async () => {
     try {
-      const response = await api.get('/rooms/')
+      const response = await api.get('/odalar/')
       return response
     } catch (error) {
       console.error('Odalar alınırken hata:', error)
+      throw error
+    }
+  },
+
+  // Filtre ile odaları getir
+  getFiltered: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams()
+
+      // Filtre parametrelerini ekle
+      if (filters.durum) params.append('durum', filters.durum)
+      if (filters.oda_tipi) params.append('oda_tipi', filters.oda_tipi)
+      if (filters.minFiyat !== undefined && filters.minFiyat !== null) {
+        params.append('minFiyat', filters.minFiyat.toString())
+      }
+      if (filters.maxFiyat !== undefined && filters.maxFiyat !== null) {
+        params.append('maxFiyat', filters.maxFiyat.toString())
+      }
+      if (filters.arama) params.append('arama', filters.arama)
+
+      const queryString = params.toString()
+      const url = queryString ? `/odalar/?${queryString}` : '/odalar/'
+
+      const response = await api.get(url)
+      return response
+    } catch (error) {
+      console.error('Filtrelenmiş odalar alınırken hata:', error)
       throw error
     }
   },

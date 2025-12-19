@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify
 from database import execute_query
 from models.oda import Oda
 from auth.jwt_utils import token_required
+from services.oda_service import OdaService
+from models.sqlalchemy_base import db_session
 
 bp = Blueprint('rooms', __name__, url_prefix='/api/rooms')
 
@@ -290,40 +292,58 @@ def delete_room(room_id, current_user):
 @bp_odalar.route('/', methods=['GET'])
 @token_required
 def get_odalar(current_user):
-    """Tüm odaları getir (Frontend uyumluluğu için)"""
+    """Filtre parametreleri ile odaları getir (Frontend uyumluluğu için)"""
     try:
-        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, metrekare, ucret_gecelik as fiyat, durum FROM odalar ORDER BY oda_numarasi"
-        results = execute_query(query, fetch=True)
+        # Query parametrelerini al
+        durum = request.args.get('durum')
+        oda_tipi = request.args.get('oda_tipi')
+        min_fiyat_str = request.args.get('minFiyat')
+        max_fiyat_str = request.args.get('maxFiyat')
+        arama = request.args.get('arama')
 
-        odalar = []
-        for row in results:
-            odalar.append({
-                'oda_id': row['oda_id'],
-                'oda_no': row['oda_no'],
-                'tip': row['tip'],
-                'manzara': row['manzara'],
-                'fiyat': float(row['fiyat']),
-                'durum': row['durum']
-            })
+        # Fiyat parametrelerini float'a dönüştür
+        min_fiyat = None
+        max_fiyat = None
 
-        # Eğer hiç oda yoksa test verileri ekle
-        if len(odalar) == 0:
-            print("Veritabanında oda bulunamadı, test verileri ekleniyor...")
-            add_test_rooms()
-            # Tekrar odaları getir
-            results = execute_query(query, fetch=True)
-            odalar = []
-            for row in results:
-                odalar.append({
-                    'oda_id': row['oda_id'],
-                    'oda_no': row['oda_no'],
-                    'tip': row['tip'],
-                    'manzara': row['manzara'],
-                    'fiyat': float(row['fiyat']),
-                    'durum': row['durum']
-                })
+        try:
+            if min_fiyat_str:
+                min_fiyat = float(min_fiyat_str)
+            if max_fiyat_str:
+                max_fiyat = float(max_fiyat_str)
+        except ValueError:
+            return jsonify({'error': 'Fiyat parametreleri geçerli sayı olmalıdır'}), 400
 
-        return jsonify(odalar), 200
+        # SQLAlchemy ile filtrele
+        db = db_session()
+        try:
+            odalar = OdaService.get_filtered_odalar(
+                db=db,
+                durum=durum,
+                oda_tipi=oda_tipi,
+                min_fiyat=min_fiyat,
+                max_fiyat=max_fiyat,
+                arama=arama
+            )
+
+            # Eğer hiç oda yoksa test verileri ekle (sadece filtre yokken)
+            if len(odalar) == 0 and not any([durum, oda_tipi, min_fiyat, max_fiyat]):
+                print("Veritabanında oda bulunamadı, test verileri ekleniyor...")
+                add_test_rooms()
+                # Tekrar odaları getir
+                odalar = OdaService.get_filtered_odalar(
+                    db=db,
+                    durum=durum,
+                    oda_tipi=oda_tipi,
+                    min_fiyat=min_fiyat,
+                    max_fiyat=max_fiyat,
+                    arama=arama
+                )
+
+            return jsonify(odalar), 200
+
+        finally:
+            db.close()
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
