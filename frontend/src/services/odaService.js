@@ -101,6 +101,17 @@ export const odaService = {
       console.error('Oda özellikleri alınırken hata:', error)
       throw error
     }
+  },
+
+  // Oda resimlerini getir
+  getResimler: async (odaId) => {
+    try {
+      const response = await api.get(`/odalar/${odaId}/resimler`)
+      return response
+    } catch (error) {
+      console.error('Oda resimleri alınırken hata:', error)
+      throw error
+    }
   }
 }
 

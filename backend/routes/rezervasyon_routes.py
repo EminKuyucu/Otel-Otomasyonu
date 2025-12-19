@@ -366,3 +366,26 @@ def update_rezervasyon_degerlendirme(rezervasyon_id, current_user):
         return jsonify({'message': 'Degerlendirme guncellendi'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp.route('/check-availability', methods=['GET'])
+@token_required
+def check_availability(current_user):
+    """Odanın belirtilen tarihlerde müsait olup olmadığını kontrol eder"""
+    try:
+        oda_id = request.args.get('oda_id')
+        giris_tarihi = request.args.get('giris_tarihi')
+        cikis_tarihi = request.args.get('cikis_tarihi')
+        exclude_id = request.args.get('exclude_id')
+
+        if not all([oda_id, giris_tarihi, cikis_tarihi]):
+            return jsonify({'error': 'oda_id, giris_tarihi ve cikis_tarihi parametreleri gerekli'}), 400
+
+        giris = parse_date(giris_tarihi)
+        cikis = parse_date(cikis_tarihi)
+
+        available = oda_musait_mi(int(oda_id), giris, cikis, int(exclude_id) if exclude_id else None)
+
+        return jsonify({'available': available}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

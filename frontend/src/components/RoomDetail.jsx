@@ -46,14 +46,16 @@ const RoomDetail = ({ roomId, isOpen, onClose, onRoomUpdate, isNewRoom = false }
           tip: '',
           fiyat: '',
           durum: 'Boş',
-          manzara: ''
+          manzara: '',
+          metrekare: ''
         })
         setEditForm({
           oda_no: '',
           tip: '',
           fiyat: '',
           durum: 'Boş',
-          manzara: ''
+          manzara: '',
+          metrekare: ''
         })
         setIsEditing(true) // Yeni oda için otomatik düzenleme modunda aç
       } else if (roomId) {
@@ -105,7 +107,8 @@ const RoomDetail = ({ roomId, isOpen, onClose, onRoomUpdate, isNewRoom = false }
         tip: editForm.tip,
         fiyat: parseFloat(editForm.fiyat) || 0,
         durum: editForm.durum,
-        manzara: editForm.manzara || 'Yok'
+        manzara: editForm.manzara || 'Yok',
+        metrekare: editForm.metrekare ? parseInt(editForm.metrekare) : null
       }
 
       if (isNewRoom) {
@@ -224,13 +227,16 @@ const RoomDetail = ({ roomId, isOpen, onClose, onRoomUpdate, isNewRoom = false }
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Oda Numarası</label>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={editForm.oda_no || ''}
-                      onChange={(e) => handleFormChange('oda_no', e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
-                      placeholder="📝 Oda numarası girin (örn: 101)"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">🏠</span>
+                      <input
+                        type="text"
+                        value={editForm.oda_no || ''}
+                        onChange={(e) => handleFormChange('oda_no', e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                        placeholder="Oda numarası girin (örn: 101)"
+                      />
+                    </div>
                   ) : (
                     <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
                       <span className="font-bold text-lg text-gray-800">🏠 {room.oda_no}</span>
@@ -248,10 +254,12 @@ const RoomDetail = ({ roomId, isOpen, onClose, onRoomUpdate, isNewRoom = false }
                       className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                     >
                       <option value="">🔸 Oda tipi seçin</option>
-                      <option value="Tek">🛏️ Tek</option>
-                      <option value="Çift">🛏️🛏️ Çift</option>
+                      <option value="Standart">🛏️ Standart</option>
+                      <option value="Deluxe">🏰 Deluxe</option>
                       <option value="Suit">🏰 Suit</option>
                       <option value="VIP">👑 VIP</option>
+                      <option value="King">👑 King</option>
+                      <option value="Queen">👑 Queen</option>
                     </select>
                   ) : (
                     <div className="px-3 py-3 bg-gray-50 border border-gray-200 rounded-lg">
@@ -318,6 +326,28 @@ const RoomDetail = ({ roomId, isOpen, onClose, onRoomUpdate, isNewRoom = false }
                         {room.manzara === 'Yok' && '🏠 '}
                         {room.manzara || 'Yok'}
                       </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Metrekare */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Metrekare</label>
+                  {isEditing ? (
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={editForm.metrekare || ''}
+                        onChange={(e) => handleFormChange('metrekare', e.target.value)}
+                        className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500"
+                        placeholder="📐 Metrekare girin"
+                        min="0"
+                      />
+                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">m²</span>
+                    </div>
+                  ) : (
+                    <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
+                      <span className="font-medium text-lg text-blue-600">📐 {room.metrekare || 0} m²</span>
                     </div>
                   )}
                 </div>

@@ -432,3 +432,40 @@ def get_oda_ozellikler(oda_id, current_user):
         return jsonify({'ozellikler': ozellikler}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@bp_odalar.route('/<int:oda_id>/resimler', methods=['GET'])
+@token_required
+def get_oda_resimleri(oda_id, current_user):
+    """Bir odanın resimlerini getir"""
+    try:
+        # Oda var mı kontrol et
+        check_query = "SELECT oda_id FROM odalar WHERE oda_id = %s"
+        existing = execute_query(check_query, params=(oda_id,), fetch=True)
+        if not existing:
+            return jsonify({'error': 'Oda bulunamadi'}), 404
+
+        # Oda resimlerini getir
+        query = """
+        SELECT resim_id, oda_id, resim_url, resim_adi, sira, yuklenme_tarihi
+        FROM oda_resimleri
+        WHERE oda_id = %s
+        ORDER BY sira ASC, yuklenme_tarihi DESC
+        """
+        results = execute_query(query, params=(oda_id,), fetch=True)
+
+        resimler = []
+        for row in results:
+            resimler.append({
+                'resim_id': row['resim_id'],
+                'oda_id': row['oda_id'],
+                'resim_url': row['resim_url'],
+                'resim_adi': row['resim_adi'],
+                'sira': row['sira'],
+                'yuklenme_tarihi': row['yuklenme_tarihi'].isoformat() if row['yuklenme_tarihi'] else None
+            })
+
+        return jsonify(resimler), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

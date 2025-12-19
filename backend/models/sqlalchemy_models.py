@@ -187,3 +187,18 @@ class SilinenRezervasyonLog(Base):
 
     def __repr__(self):
         return f"<SilinenRezervasyonLog(log_id={self.log_id}, rezervasyon_id={self.rezervasyon_id}, musteri_id={self.musteri_id})>"
+
+
+class OdaResim(Base):
+    """Oda resimleri tablosu SQLAlchemy modeli"""
+    __tablename__ = 'oda_resimleri'
+
+    resim_id = Column(Integer, primary_key=True, autoincrement=True)
+    oda_id = Column(Integer, ForeignKey('odalar.oda_id'), nullable=False)
+    resim_url = Column(String(500), nullable=False)
+    resim_adi = Column(String(255))
+    sira = Column(Integer, default=0)
+    yuklenme_tarihi = Column(TIMESTAMP, server_default=func.current_timestamp())
+
+    def __repr__(self):
+        return f"<OdaResim(resim_id={self.resim_id}, oda_id={self.oda_id}, resim_adi='{self.resim_adi}')>"

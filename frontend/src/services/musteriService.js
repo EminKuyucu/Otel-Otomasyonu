@@ -8,6 +8,7 @@ export const musteriService = {
   delete: (id) => api.delete(`/customers/${id}/`),
   getExpenses: (id) => api.get(`/customers/${id}/harcamalar/`),
   getReviews: (id) => api.get(`/customers/${id}/degerlendirme/`),
+  createReview: (reservationId, data) => api.post(`/reservations/${reservationId}/degerlendirme/`, data),
 }
 
 

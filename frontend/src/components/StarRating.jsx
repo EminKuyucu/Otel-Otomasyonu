@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Star } from 'lucide-react'
 
+console.log('StarRating component loaded')
+
 const StarRating = ({
   rating = 0,
   onRatingChange,
