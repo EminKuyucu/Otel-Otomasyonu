@@ -5,6 +5,9 @@ from auth.jwt_utils import token_required
 
 bp = Blueprint('rooms', __name__, url_prefix='/api/rooms')
 
+# Frontend'in kullandığı endpoint'ler için ikinci blueprint
+bp_odalar = Blueprint('odalar', __name__, url_prefix='/api/odalar')
+
 @bp.route('/options', methods=['GET'])
 @token_required
 def get_room_options(current_user):
@@ -30,9 +33,45 @@ def get_rooms(current_user):
             oda = Oda.from_dict(row)
             odalar.append(oda.to_dict())
 
+        # Eğer hiç oda yoksa test verileri ekle
+        if len(odalar) == 0:
+            print("Veritabanında oda bulunamadı, test verileri ekleniyor...")
+            add_test_rooms()
+            # Tekrar odaları getir
+            results = execute_query(query, fetch=True)
+            odalar = []
+            for row in results:
+                oda = Oda.from_dict(row)
+                odalar.append(oda.to_dict())
+
         return jsonify(odalar), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+def add_test_rooms():
+    """Test odalarını veritabanına ekler"""
+    test_rooms = [
+        (101, 'Tek', 'Deniz', 150.00, 'Boş'),
+        (102, 'Çift', 'Panoramik Deniz', 250.00, 'Dolu'),
+        (103, 'Suit', 'Bahçe', 400.00, 'Rezerve'),
+        (104, 'VIP', 'Havuz', 600.00, 'Boş'),
+        (105, 'Tek', 'Şehir', 120.00, 'Temizlikte'),
+        (106, 'Çift', 'Orman', 180.00, 'Boş'),
+        (201, 'Tek', 'Yok', 100.00, 'Tadilat'),
+        (202, 'Suit', 'Deniz', 450.00, 'Boş'),
+        (203, 'Çift', 'Bahçe', 220.00, 'Dolu'),
+        (204, 'VIP', 'Panoramik Deniz', 750.00, 'Rezerve')
+    ]
+
+    for room_no, tip, manzara, fiyat, durum in test_rooms:
+        try:
+            execute_query('''
+                INSERT INTO odalar (oda_numarasi, oda_tipi, manzara, ucret_gecelik, durum)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (room_no, tip, manzara, fiyat, durum))
+            print(f"Oda {room_no} eklendi")
+        except Exception as e:
+            print(f"Oda {room_no} eklenirken hata: {e}")
 
 @bp.route('/available', methods=['GET'])
 @token_required
@@ -129,7 +168,7 @@ def update_room(room_id, current_user):
         data = request.get_json()
 
         # Oda var mı kontrol et
-        check_query = "SELECT oda_id FROM oda WHERE oda_id = %s"
+        check_query = "SELECT oda_id FROM odalar WHERE oda_id = %s"
         existing = execute_query(check_query, params=(room_id,), fetch=True)
         if not existing:
             return jsonify({'error': 'Oda bulunamadı'}), 404
@@ -246,3 +285,129 @@ def delete_room(room_id, current_user):
         return jsonify({'message': 'Oda başarıyla silindi'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+# Frontend'in kullandığı /api/odalar endpoint'leri
+@bp_odalar.route('/', methods=['GET'])
+@token_required
+def get_odalar(current_user):
+    """Tüm odaları getir (Frontend uyumluluğu için)"""
+    try:
+        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, ucret_gecelik as fiyat, durum FROM odalar ORDER BY oda_numarasi"
+        results = execute_query(query, fetch=True)
+
+        odalar = []
+        for row in results:
+            odalar.append({
+                'oda_id': row['oda_id'],
+                'oda_no': row['oda_no'],
+                'tip': row['tip'],
+                'manzara': row['manzara'],
+                'fiyat': float(row['fiyat']),
+                'durum': row['durum']
+            })
+
+        # Eğer hiç oda yoksa test verileri ekle
+        if len(odalar) == 0:
+            print("Veritabanında oda bulunamadı, test verileri ekleniyor...")
+            add_test_rooms()
+            # Tekrar odaları getir
+            results = execute_query(query, fetch=True)
+            odalar = []
+            for row in results:
+                odalar.append({
+                    'oda_id': row['oda_id'],
+                    'oda_no': row['oda_no'],
+                    'tip': row['tip'],
+                    'manzara': row['manzara'],
+                    'fiyat': float(row['fiyat']),
+                    'durum': row['durum']
+                })
+
+        return jsonify(odalar), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp_odalar.route('/<int:oda_id>', methods=['GET'])
+@token_required
+def get_oda_by_id(oda_id, current_user):
+    """Tek bir oda detayını getir"""
+    try:
+        query = "SELECT oda_id, oda_numarasi as oda_no, oda_tipi as tip, manzara, ucret_gecelik as fiyat, durum FROM odalar WHERE oda_id = %s"
+        results = execute_query(query, params=(oda_id,), fetch=True)
+
+        if not results:
+            return jsonify({'error': 'Oda bulunamadı'}), 404
+
+        oda = results[0]
+        return jsonify({
+            'oda_id': oda['oda_id'],
+            'oda_no': oda['oda_no'],
+            'tip': oda['tip'],
+            'manzara': oda['manzara'],
+            'fiyat': float(oda['fiyat']),
+            'durum': oda['durum']
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp_odalar.route('/', methods=['POST'])
+@token_required
+def create_oda(current_user):
+    """Yeni oda oluştur"""
+    try:
+        data = request.get_json()
+
+        # Gerekli alanları kontrol et
+        required_fields = ['oda_no', 'tip', 'fiyat', 'durum']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'{field} alanı zorunludur'}), 400
+
+        # Veritabanına ekle
+        query = """
+            INSERT INTO odalar (oda_numarasi, oda_tipi, manzara, ucret_gecelik, durum)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        execute_query(query, params=(
+            data['oda_no'],
+            data['tip'],
+            data.get('manzara', 'Yok'),
+            float(data['fiyat']),
+            data['durum']
+        ), fetch=False)
+
+        return jsonify({'message': 'Oda başarıyla oluşturuldu'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp_odalar.route('/<int:oda_id>', methods=['PUT'])
+@token_required
+def update_oda(oda_id, current_user):
+    """Oda güncelle"""
+    try:
+        data = request.get_json()
+
+        # Oda var mı kontrol et
+        check_query = "SELECT oda_id FROM odalar WHERE oda_id = %s"
+        existing = execute_query(check_query, params=(oda_id,), fetch=True)
+        if not existing:
+            return jsonify({'error': 'Oda bulunamadı'}), 404
+
+        # Güncelle
+        query = """
+            UPDATE odalar
+            SET oda_numarasi = %s, oda_tipi = %s, manzara = %s, ucret_gecelik = %s, durum = %s
+            WHERE oda_id = %s
+        """
+        execute_query(query, params=(
+            data['oda_no'],
+            data['tip'],
+            data.get('manzara', 'Yok'),
+            float(data['fiyat']),
+            data['durum'],
+            oda_id
+        ), fetch=False)
+
+        return jsonify({'message': 'Oda başarıyla güncellendi'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

@@ -1,14 +1,96 @@
 import api from './api'
 
 export const odaService = {
-  getAll: () => api.get('/rooms/'),
-  getOptions: () => api.get('/rooms/options'),
-  getAvailable: () => api.get('/rooms/available/'),
-  getById: (id) => api.get(`/rooms/${id}/`),
-  create: (data) => api.post('/rooms/', data),
-  update: (id, data) => api.put(`/rooms/${id}/`, data),
-  updateStatus: (id, status) => api.put(`/rooms/${id}/status/`, { durum: status }),
-  delete: (id) => api.delete(`/rooms/${id}/`),
+  // Tüm odaları getir
+  getAll: async () => {
+    try {
+      const response = await api.get('/rooms/')
+      return response
+    } catch (error) {
+      console.error('Odalar alınırken hata:', error)
+      throw error
+    }
+  },
+
+  // Oda seçeneklerini getir (tip, durum)
+  getOptions: async () => {
+    try {
+      const response = await api.get('/rooms/options')
+      return response
+    } catch (error) {
+      console.error('Oda seçenekleri alınırken hata:', error)
+      throw error
+    }
+  },
+
+  // Müsait odaları getir
+  getAvailable: async () => {
+    try {
+      const response = await api.get('/rooms/available/')
+      return response
+    } catch (error) {
+      console.error('Müsait odalar alınırken hata:', error)
+      throw error
+    }
+  },
+
+  // ID'ye göre oda getir
+  getById: async (id) => {
+    console.log('odaService.getById çağrıldı, ID:', id)
+    try {
+      const response = await api.get(`/rooms/${id}/`)
+      console.log('odaService.getById yanıtı:', response)
+      return response
+    } catch (error) {
+      console.error('odaService.getById hatası:', error)
+      console.error('odaService.getById hata detayı:', error.response?.data)
+      throw error
+    }
+  },
+
+  // Yeni oda oluştur
+  create: async (data) => {
+    try {
+      const response = await api.post('/rooms/', data)
+      return response
+    } catch (error) {
+      console.error('Oda oluşturulurken hata:', error)
+      throw error
+    }
+  },
+
+  // Oda bilgilerini güncelle
+  update: async (id, data) => {
+    try {
+      const response = await api.put(`/rooms/${id}/`, data)
+      return response
+    } catch (error) {
+      console.error('Oda güncellenirken hata:', error)
+      throw error
+    }
+  },
+
+  // Oda durumunu güncelle
+  updateStatus: async (id, status) => {
+    try {
+      const response = await api.put(`/rooms/${id}/status/`, { durum: status })
+      return response
+    } catch (error) {
+      console.error('Oda durumu güncellenirken hata:', error)
+      throw error
+    }
+  },
+
+  // Odayı sil
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/rooms/${id}/`)
+      return response
+    } catch (error) {
+      console.error('Oda silinirken hata:', error)
+      throw error
+    }
+  }
 }
 
 

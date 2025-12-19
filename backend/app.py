@@ -41,7 +41,7 @@ atexit.register(close_connection)
 
 # Route'lari import et
 from routes.auth_routes import bp as auth_bp
-from routes.oda_routes import bp as rooms_bp
+from routes.oda_routes import bp as rooms_bp, bp_odalar as odalar_bp
 from routes.musteri_routes import bp as customers_bp
 from routes.personel_routes import bp as staff_bp
 from routes.rezervasyon_routes import bp as reservations_bp
@@ -49,10 +49,12 @@ from routes.stok_routes import bp as stock_bp
 from routes.hizmet_routes import bp as services_bp
 from routes.odeme_routes import bp as payments_bp
 from routes.report_routes import bp as reports_bp
+from routes.dashboard_routes import bp as dashboard_bp
 
 # Blueprint'leri kaydet
 app.register_blueprint(auth_bp)
 app.register_blueprint(rooms_bp)
+app.register_blueprint(odalar_bp)
 app.register_blueprint(customers_bp)
 app.register_blueprint(staff_bp)
 app.register_blueprint(reservations_bp)
@@ -60,6 +62,7 @@ app.register_blueprint(stock_bp)
 app.register_blueprint(services_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(reports_bp)
+app.register_blueprint(dashboard_bp)
 
 @app.route('/')
 def index():

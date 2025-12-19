@@ -1,29 +1,21 @@
 import { useEffect, useState } from 'react'
 import { odaService } from '../services/odaService'
-
-const statusColors = {
-  'Boş': 'bg-green-100 text-green-800',
-  'Dolu': 'bg-red-100 text-red-800',
-  'Tadilat': 'bg-yellow-100 text-yellow-800',
-}
+import RoomCard from '../components/RoomCard'
+import RoomDetail from '../components/RoomDetail'
 
 function Rooms() {
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [editingRoom, setEditingRoom] = useState(null)
   const [roomTypes, setRoomTypes] = useState([])
   const [roomStatuses, setRoomStatuses] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterType, setFilterType] = useState('')
-  const [formData, setFormData] = useState({
-    oda_no: '',
-    tip: '',
-    fiyat: '',
-    durum: 'Boş',
-  })
+
+  // Modal state'leri
+  const [selectedRoomId, setSelectedRoomId] = useState(null)
+  const [showRoomDetail, setShowRoomDetail] = useState(false)
 
   const fetchRoomOptions = async () => {
     try {
@@ -53,34 +45,6 @@ function Rooms() {
     fetchRooms()
   }, [])
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    try {
-      if (editingRoom) {
-        await odaService.update(editingRoom.oda_id, formData)
-      } else {
-        await odaService.create(formData)
-      }
-      setShowForm(false)
-      setEditingRoom(null)
-      setFormData({ oda_no: '', tip: '', fiyat: '', durum: 'Boş' })
-      fetchRooms()
-    } catch (err) {
-      setError(err.response?.data?.error || 'İşlem başarısız')
-    }
-  }
-
-  const handleEdit = (room) => {
-    setEditingRoom(room)
-    setFormData({
-      oda_no: room.oda_no,
-      tip: room.tip,
-      fiyat: room.fiyat,
-      durum: room.durum,
-    })
-    setShowForm(true)
-  }
 
   const handleDelete = async (id) => {
     if (!window.confirm('Bu odayı silmek istediğinize emin misiniz?')) return
@@ -101,17 +65,36 @@ function Rooms() {
     }
   }
 
+  // Oda kartı tıklama işlemi - Modal açma
+  const handleRoomClick = (room) => {
+    setSelectedRoomId(room.oda_id)
+    setShowRoomDetail(true)
+  }
+
+  // Modal kapatma işlemi
+  const handleCloseModal = () => {
+    setShowRoomDetail(false)
+    setSelectedRoomId(null)
+  }
+
+  // Oda güncellendiğinde listeyi yenileme
+  const handleRoomUpdate = () => {
+    fetchRooms()
+  }
+
+  // Yeni oda ekleme modal'ını açma
+  const handleAddNewRoom = () => {
+    setSelectedRoomId(null) // Yeni oda için null
+    setShowRoomDetail(true)
+  }
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Oda Yönetimi</h1>
         <button
-          onClick={() => {
-            setShowForm(true)
-            setEditingRoom(null)
-            setFormData({ oda_no: '', tip: '', fiyat: '', durum: 'Boş' })
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={handleAddNewRoom}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
         >
           Yeni Oda Ekle
         </button>
@@ -164,150 +147,54 @@ function Rooms() {
         <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
       )}
 
-      {showForm && (
-        <div className="mb-6 p-4 bg-white border rounded-lg">
-          <h2 className="text-lg font-semibold mb-4">
-            {editingRoom ? 'Oda Düzenle' : 'Yeni Oda Ekle'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Oda No</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.oda_no}
-                  onChange={(e) => setFormData({ ...formData, oda_no: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Tip</label>
-                <select
-                  required
-                  value={formData.tip}
-                  onChange={(e) => setFormData({ ...formData, tip: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                >
-                  <option value="">Seç...</option>
-                  {roomTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Fiyat</label>
-                <input
-                  type="number"
-                  required
-                  step="0.01"
-                  value={formData.fiyat}
-                  onChange={(e) => setFormData({ ...formData, fiyat: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Durum</label>
-                <select
-                  value={formData.durum}
-                  onChange={(e) => setFormData({ ...formData, durum: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
-                >
-                  {roomStatuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                {editingRoom ? 'Güncelle' : 'Ekle'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowForm(false)
-                  setEditingRoom(null)
-                }}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
-              >
-                İptal
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {loading ? (
-        <p>Yükleniyor...</p>
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Oda No</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tip</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fiyat</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Durum</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {rooms
-                .filter((room) => {
-                  const matchSearch = room.oda_no.toString().includes(searchTerm) || room.tip.toLowerCase().includes(searchTerm.toLowerCase())
-                  const matchType = !filterType || room.tip === filterType
-                  const matchStatus = !filterStatus || room.durum === filterStatus
-                  return matchSearch && matchType && matchStatus
-                })
-                .map((room) => (
-                <tr key={room.oda_id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{room.oda_no}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{room.tip}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{room.fiyat} ₺</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={room.durum}
-                      onChange={(e) => handleStatusChange(room.oda_id, e.target.value)}
-                      className={`text-xs px-2 py-1 rounded ${statusColors[room.durum] || 'bg-gray-100'}`}
-                    >
-                      {roomStatuses.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => handleEdit(room)}
-                      className="text-blue-600 hover:text-blue-800 mr-3"
-                    >
-                      Düzenle
-                    </button>
-                    <button
-                      onClick={() => handleDelete(room.oda_id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Sil
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {rooms.length === 0 && (
-            <div className="p-6 text-center text-gray-500">Kayıt bulunamadı</div>
-          )}
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Odalar yükleniyor...</span>
         </div>
+      ) : (
+        <>
+          {/* Oda Kartları Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {rooms
+              .filter((room) => {
+                const matchSearch = room.oda_no.toString().includes(searchTerm) || room.tip.toLowerCase().includes(searchTerm.toLowerCase())
+                const matchType = !filterType || room.tip === filterType
+                const matchStatus = !filterStatus || room.durum === filterStatus
+                return matchSearch && matchType && matchStatus
+              })
+              .map((room) => (
+                <RoomCard
+                  key={room.oda_id}
+                  room={room}
+                  onClick={handleRoomClick}
+                />
+              ))}
+          </div>
+
+          {rooms.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-2">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+              <p className="text-gray-500 text-lg">Kayıt bulunamadı</p>
+              <p className="text-gray-400 text-sm mt-1">Arama kriterlerinizi kontrol edin</p>
+            </div>
+          )}
+        </>
       )}
+
+      {/* Oda Detay Modal */}
+      <RoomDetail
+        roomId={selectedRoomId}
+        isOpen={showRoomDetail}
+        onClose={handleCloseModal}
+        onRoomUpdate={handleRoomUpdate}
+        isNewRoom={!selectedRoomId}
+      />
     </div>
   )
 }

@@ -1,5 +1,7 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { dashboardService } from '../services/api'
+import { getUser } from '../services/authService'
 import {
   Home,
   Calendar,
@@ -24,27 +26,90 @@ import {
 } from 'lucide-react'
 
 const Dashboard = () => {
-  // Dummy data
-  const stats = [
-    { title: 'Toplam Rezervasyon', value: '156', icon: Calendar, color: 'text-blue-600' },
-    { title: 'Dolu Odalar', value: '42', icon: DoorOpen, color: 'text-red-600' },
-    { title: 'Müsait Odalar', value: '18', icon: Bed, color: 'text-green-600' },
-    { title: 'Bugünkü Girişler', value: '8', icon: TrendingUp, color: 'text-purple-600' }
-  ]
+  const navigate = useNavigate()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [user, setUser] = useState(null)
 
-  const activeReservations = [
-    { id: 1, name: 'Ahmet Yılmaz', room: '101', date: '2025-12-20', status: 'Aktif' },
-    { id: 2, name: 'Ayşe Kaya', room: '205', date: '2025-12-21', status: 'Bekliyor' },
-    { id: 3, name: 'Mehmet Demir', room: '312', date: '2025-12-22', status: 'Aktif' },
-    { id: 4, name: 'Fatma Şahin', room: '108', date: '2025-12-23', status: 'İptal' }
-  ]
+  // Dashboard verileri için state
+  const [stats, setStats] = useState([])
+  const [activeReservations, setActiveReservations] = useState([])
+  const [todaysEvents, setTodaysEvents] = useState([])
+  const [dashboardData, setDashboardData] = useState(null)
 
-  const todaysEvents = [
-    { type: 'checkin', name: 'Ali Veli', room: '101', time: '14:00' },
-    { type: 'checkout', name: 'Zeynep Aslan', room: '205', time: '11:00' },
-    { type: 'checkin', name: 'Can Özkan', room: '312', time: '16:30' }
-  ]
+  // Kullanıcı bilgilerini ve dashboard verilerini yükle
+  useEffect(() => {
+    const currentUser = getUser()
+    setUser(currentUser)
+    loadDashboardData()
+  }, [])
 
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Paralel olarak tüm dashboard verilerini çek
+      const [statsResponse, reservationsResponse, eventsResponse] = await Promise.all([
+        dashboardService.getStats(),
+        dashboardService.getActiveReservations(),
+        dashboardService.getTodaysEvents()
+      ])
+
+      if (statsResponse.success) {
+        const statsData = statsResponse.data
+        setDashboardData(statsData)
+
+        // İstatistik kartlarını oluştur
+        const newStats = [
+          { title: 'Toplam Rezervasyon', value: statsData.total_reservations.toString(), icon: Calendar, color: 'text-blue-600' },
+          { title: 'Dolu Odalar', value: statsData.occupied_rooms.toString(), icon: DoorOpen, color: 'text-red-600' },
+          { title: 'Müsait Odalar', value: statsData.available_rooms.toString(), icon: Bed, color: 'text-green-600' },
+          { title: 'Bugünkü Girişler', value: statsData.todays_checkins.toString(), icon: TrendingUp, color: 'text-purple-600' }
+        ]
+        setStats(newStats)
+      }
+
+      if (reservationsResponse.success) {
+        setActiveReservations(reservationsResponse.data)
+      }
+
+      if (eventsResponse.success) {
+        setTodaysEvents(eventsResponse.data)
+      }
+
+    } catch (err) {
+      console.error('Dashboard verileri yüklenirken hata:', err)
+      setError('Dashboard verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.')
+
+      // Hata durumunda boş veriler göster
+      setStats([
+        { title: 'Toplam Rezervasyon', value: '0', icon: Calendar, color: 'text-blue-600' },
+        { title: 'Dolu Odalar', value: '0', icon: DoorOpen, color: 'text-red-600' },
+        { title: 'Müsait Odalar', value: '0', icon: Bed, color: 'text-green-600' },
+        { title: 'Bugünkü Girişler', value: '0', icon: TrendingUp, color: 'text-purple-600' }
+      ])
+      setActiveReservations([])
+      setTodaysEvents([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Buton click handler'ları
+  const handleNewReservation = () => {
+    navigate('/reservations')
+  }
+
+  const handleAddRoom = () => {
+    navigate('/rooms')
+  }
+
+  const handleAddCustomer = () => {
+    navigate('/customers')
+  }
+
+  // Sabit duyurular (şimdilik hardcoded, ileride backend'den çekilebilir)
   const announcements = [
     { type: 'info', message: 'Oda 205 temizlik için hazırlandı.', time: '10:30' },
     { type: 'warning', message: 'Rezervasyon 123 için ödeme bekleniyor.', time: '09:15' },
@@ -136,18 +201,29 @@ const Dashboard = () => {
       <div className="relative bg-cover bg-center h-64" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80)'}}>
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="text-4xl font-bold text-white mb-4">Hoşgeldiniz Mehmet Aydın!</h1>
+          <h1 className="text-4xl font-bold text-white mb-4">
+            Hoşgeldiniz {user?.ad_soyad || 'Kullanıcı'}!
+          </h1>
           <p className="text-xl text-gray-200 mb-8">Bugün otel yönetimini kolaylaştırın.</p>
           <div className="flex flex-wrap gap-4">
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center">
+            <button
+              onClick={handleNewReservation}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200"
+            >
               <Plus className="w-5 h-5 mr-2" />
               Yeni Rezervasyon
             </button>
-            <button className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center">
+            <button
+              onClick={handleAddRoom}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200"
+            >
               <Bed className="w-5 h-5 mr-2" />
               Oda Ekle
             </button>
-            <button className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium flex items-center">
+            <button
+              onClick={handleAddCustomer}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200"
+            >
               <UsersIcon className="w-5 h-5 mr-2" />
               Müşteri Ekle
             </button>
@@ -157,6 +233,15 @@ const Dashboard = () => {
 
       {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {error && (
+          <div className="mb-8 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+              <span className="text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <div key={index} className="bg-white rounded-lg shadow-md p-6">
@@ -193,18 +278,28 @@ const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {activeReservations.map((reservation) => (
-                      <tr key={reservation.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{reservation.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reservation.room}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reservation.date}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reservation.status)}`}>
-                            {reservation.status}
-                          </span>
+                    {activeReservations.length > 0 ? (
+                      activeReservations.map((reservation) => (
+                        <tr key={reservation.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{reservation.name}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{reservation.room}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {reservation.checkin_date ? new Date(reservation.checkin_date).toLocaleDateString('tr-TR') : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(reservation.status)}`}>
+                              {reservation.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                          {loading ? 'Yükleniyor...' : 'Aktif rezervasyon bulunamadı.'}
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -227,12 +322,14 @@ const Dashboard = () => {
                       fill="none"
                       stroke="#3B82F6"
                       strokeWidth="3"
-                      strokeDasharray="70, 100"
+                      strokeDasharray={`${dashboardData ? dashboardData.occupancy_rate : 0}, 100`}
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">70%</div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {dashboardData ? `${dashboardData.occupancy_rate}%` : '0%'}
+                      </div>
                       <div className="text-sm text-gray-500">Dolu</div>
                     </div>
                   </div>
@@ -249,15 +346,21 @@ const Dashboard = () => {
                 <h3 className="text-lg font-medium text-gray-900">Bugünkü Giriş & Çıkışlar</h3>
               </div>
               <div className="divide-y divide-gray-200">
-                {todaysEvents.map((event, index) => (
-                  <div key={index} className="px-6 py-4 flex items-center">
-                    {getEventIcon(event.type)}
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">{event.name}</p>
-                      <p className="text-sm text-gray-500">Oda {event.room} - {event.time}</p>
+                {todaysEvents.length > 0 ? (
+                  todaysEvents.map((event, index) => (
+                    <div key={index} className="px-6 py-4 flex items-center">
+                      {getEventIcon(event.type)}
+                      <div className="ml-3">
+                        <p className="text-sm font-medium text-gray-900">{event.name}</p>
+                        <p className="text-sm text-gray-500">Oda {event.room} - {event.time}</p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="px-6 py-4 text-center text-sm text-gray-500">
+                    {loading ? 'Yükleniyor...' : 'Bugün için olay bulunamadı.'}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 

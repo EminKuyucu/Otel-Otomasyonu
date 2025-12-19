@@ -8,7 +8,9 @@ class Oda:
     DURUM_BOS = 'Boş'
     DURUM_DOLU = 'Dolu'
     DURUM_TADILAT = 'Tadilat'
-    DURUM_CHOICES = [DURUM_BOS, DURUM_DOLU, DURUM_TADILAT]
+    DURUM_TEMIZLIKTE = 'Temizlikte'
+    DURUM_REZERVE = 'Rezerve'
+    DURUM_CHOICES = [DURUM_BOS, DURUM_DOLU, DURUM_TADILAT, DURUM_TEMIZLIKTE, DURUM_REZERVE]
 
     # Oda tipi sabitlikleri
     TIPO_STANDART = 'Standart'
