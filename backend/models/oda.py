@@ -29,13 +29,15 @@ class Oda:
 
     def __init__(self, oda_id: Optional[int] = None, oda_numarasi: str = "",
                  oda_tipi: str = "", ucret_gecelik: float = 0.0, durum: str = DURUM_BOS,
-                 manzara: str = "", olusturulma_tarihi: Optional[datetime] = None):
+                 manzara: str = "", metrekare: Optional[int] = None,
+                 olusturulma_tarihi: Optional[datetime] = None):
         self.oda_id = oda_id
         self.oda_numarasi = oda_numarasi
         self.oda_tipi = oda_tipi
         self.ucret_gecelik = ucret_gecelik
         self.durum = durum
         self.manzara = manzara
+        self.metrekare = metrekare
         self.olusturulma_tarihi = olusturulma_tarihi or datetime.utcnow()
 
     # Frontend uyumluluğu için properties
@@ -77,6 +79,13 @@ class Oda:
         except (ValueError, TypeError):
             fiyat = 0.0
         
+        # Metrekare'yi parse et
+        metrekare = data.get('metrekare')
+        try:
+            metrekare = int(metrekare) if metrekare is not None else None
+        except (ValueError, TypeError):
+            metrekare = None
+
         return cls(
             oda_id=data.get('oda_id'),
             oda_numarasi=oda_no,
@@ -84,6 +93,7 @@ class Oda:
             ucret_gecelik=fiyat,
             durum=data.get('durum', cls.DURUM_BOS),
             manzara=data.get('manzara', ''),
+            metrekare=metrekare,
             olusturulma_tarihi=data.get('olusturulma_tarihi')
         )
 
@@ -91,11 +101,16 @@ class Oda:
         """Objeyi dictionary'e çevirir"""
         return {
             'oda_id': self.oda_id,
+            'oda_numarasi': self.oda_numarasi,
+            'oda_tipi': self.oda_tipi,
+            'manzara': self.manzara,
+            'metrekare': self.metrekare,
+            'ucret_gecelik': self.ucret_gecelik,
+            'durum': self.durum,
+            # Frontend uyumluluğu için alias'lar
             'oda_no': self.oda_numarasi,
             'tip': self.oda_tipi,
             'fiyat': self.ucret_gecelik,
-            'durum': self.durum,
-            'manzara': self.manzara,
             'olusturulma_tarihi': self.olusturulma_tarihi.isoformat() if self.olusturulma_tarihi else None
         }
 

@@ -80,7 +80,20 @@ const Dashboard = () => {
 
     } catch (err) {
       console.error('Dashboard verileri yüklenirken hata:', err)
-      setError('Dashboard verileri yüklenirken bir hata oluştu. Lütfen sayfayı yenileyin.')
+
+      // Daha detaylı hata mesajı
+      let errorMessage = 'Dashboard verileri yüklenirken bir hata oluştu.'
+      if (err.response?.status === 401) {
+        errorMessage = 'Oturum süresi dolmuş. Lütfen tekrar giriş yapın.'
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.'
+      } else if (!err.response) {
+        errorMessage = 'Sunucuya bağlanılamıyor. Backend\'in çalıştığından emin olun.'
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error
+      }
+
+      setError(errorMessage)
 
       // Hata durumunda boş veriler göster
       setStats([

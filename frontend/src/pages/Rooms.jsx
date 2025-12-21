@@ -6,6 +6,21 @@ import RoomCard from '../components/RoomCard'
 import RoomDetail from '../components/RoomDetail'
 import ImageCarousel from '../components/ImageCarousel'
 
+// Manzara bilgisine göre görsel URL'leri
+const getRoomImage = (manzara) => {
+  const viewImages = {
+    'Bahçe': 'https://images.unsplash.com/photo-1501004318641-b39e6451bec6',
+    'Deniz': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+    'Havuz': 'https://images.unsplash.com/photo-1571896349842-33c89424de2d',
+    'Orman': 'https://images.unsplash.com/photo-1501785888041-af3ef285b470',
+    'Panoramik': 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee',
+    'Panoramik Deniz': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e',
+    'Şehir': 'https://images.unsplash.com/photo-1468436139062-f60a71c5c892',
+    'Yok': 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267'
+  }
+  return viewImages[manzara] || viewImages['Yok']
+}
+
 function Rooms() {
   const [rooms, setRooms] = useState([])
   const [filteredRooms, setFilteredRooms] = useState([])
@@ -354,25 +369,15 @@ function Rooms() {
             {filteredRooms.map((room) => (
               <div key={room.oda_id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow duration-200 overflow-hidden">
                 {/* Oda Görseli */}
-                <div className="h-32 bg-gradient-to-br from-blue-400 to-purple-500 relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-white">
-                      <div className="text-2xl mb-1">
-                        {room.manzara === 'Deniz' ? '🌊' :
-                         room.manzara === 'Bahçe' ? '🌳' :
-                         room.manzara === 'Havuz' ? '🏊' :
-                         room.manzara === 'Şehir' ? '🏙️' :
-                         room.manzara === 'Orman' ? '🌲' : '🏨'}
-                      </div>
-                      <div className="text-xs opacity-90">{room.manzara || 'Oda'}</div>
-                    </div>
-                  </div>
-                  {/* Resim göstergesi */}
-                  {roomImages.length > 0 && (
-                    <div className="absolute bottom-2 right-2 bg-black bg-opacity-70 text-white px-2 py-1 rounded text-xs">
-                      📷 {roomImages.length}
-                    </div>
-                  )}
+                <div className="h-48 relative overflow-hidden">
+                  <img
+                    src={getRoomImage(room.manzara)}
+                    alt={`${room.manzara || 'Oda'} manzarası`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = getRoomImage('Yok')
+                    }}
+                  />
                   {/* Durum badge */}
                   <div className="absolute top-2 right-2">
                     <span className={`px-2 py-1 text-xs rounded-full font-medium ${
@@ -390,18 +395,26 @@ function Rooms() {
                 {/* Oda Bilgileri */}
                 <div className="p-4">
                   <div className="mb-3">
-                    <h3 className="text-lg font-bold text-gray-900">Oda {room.oda_no}</h3>
-                    <p className="text-sm text-gray-600">{room.tip}</p>
+                    <h3 className="text-lg font-bold text-gray-900">Oda {room?.oda_no ?? '—'}</h3>
+                    <p className="text-sm text-gray-600">{room?.oda_tipi ?? room?.tip ?? '—'}</p>
                   </div>
 
                   <div className="space-y-1 mb-4 text-sm">
                     <div className="flex justify-between">
+                      <span className="text-gray-600">Oda Tipi:</span>
+                      <span className="font-medium">{room?.oda_tipi ?? room?.tip ?? "—"}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-gray-600">Metrekare:</span>
-                      <span className="font-medium">{room.metrekare || 0} m²</span>
+                      <span className="font-medium">{room?.metrekare ?? "—"} m²</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Günlük Ücret:</span>
-                      <span className="font-bold text-green-600">₺{room.fiyat}</span>
+                      <span className="font-bold text-green-600">₺{room?.ucret_gecelik ?? room?.fiyat ?? "—"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Manzara:</span>
+                      <span className="font-medium">{room?.manzara ?? "—"}</span>
                     </div>
                   </div>
 

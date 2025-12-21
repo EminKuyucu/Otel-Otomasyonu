@@ -79,12 +79,16 @@ class OdaService:
         for oda in results:
             odalar.append({
                 'oda_id': oda.oda_id,
-                'oda_no': oda.oda_numarasi,
-                'tip': oda.oda_tipi,
+                'oda_numarasi': oda.oda_numarasi,
+                'oda_tipi': oda.oda_tipi,
                 'manzara': oda.manzara,
                 'metrekare': oda.metrekare,
-                'fiyat': float(oda.ucret_gecelik),
-                'durum': oda.durum
+                'ucret_gecelik': float(oda.ucret_gecelik),
+                'durum': oda.durum,
+                # Frontend uyumluluğu için alias'lar
+                'oda_no': oda.oda_numarasi,
+                'tip': oda.oda_tipi,
+                'fiyat': float(oda.ucret_gecelik)
             })
 
         return odalar
@@ -121,10 +125,14 @@ class OdaService:
 
         return {
             'oda_id': oda.oda_id,
-            'oda_no': oda.oda_numarasi,
-            'tip': oda.oda_tipi,
+            'oda_numarasi': oda.oda_numarasi,
+            'oda_tipi': oda.oda_tipi,
             'manzara': oda.manzara,
             'metrekare': oda.metrekare,
-            'fiyat': float(oda.ucret_gecelik),
-            'durum': oda.durum
+            'ucret_gecelik': float(oda.ucret_gecelik),
+            'durum': oda.durum,
+            # Frontend uyumluluğu için alias'lar
+            'oda_no': oda.oda_numarasi,
+            'tip': oda.oda_tipi,
+            'fiyat': float(oda.ucret_gecelik)
         }

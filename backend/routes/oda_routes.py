@@ -361,11 +361,16 @@ def get_oda_by_id(oda_id, current_user):
         oda = results[0]
         return jsonify({
             'oda_id': oda['oda_id'],
+            'oda_numarasi': oda['oda_no'],
+            'oda_tipi': oda['tip'],
+            'manzara': oda['manzara'],
+            'metrekare': oda.get('metrekare'),
+            'ucret_gecelik': float(oda['fiyat']),
+            'durum': oda['durum'],
+            # Frontend uyumluluğu için alias'lar
             'oda_no': oda['oda_no'],
             'tip': oda['tip'],
-            'manzara': oda['manzara'],
-            'fiyat': float(oda['fiyat']),
-            'durum': oda['durum']
+            'fiyat': float(oda['fiyat'])
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
