@@ -9,16 +9,35 @@ const api = axios.create({
   },
 })
 
+// Global token variable - will be set by AuthContext
+let currentToken = null
+
+export const setAuthToken = (token) => {
+  currentToken = token
+}
+
 // Request interceptor: token ekle
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    // Use current token from AuthContext
+    if (currentToken) {
+      config.headers.Authorization = `Bearer ${currentToken}`
     }
     return config
   },
   (error) => Promise.reject(error)
+)
+
+// Response interceptor: handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid - AuthContext will handle logout
+      console.log('Token expired or invalid')
+    }
+    return Promise.reject(error)
+  }
 )
 
 // Dashboard API servisleri

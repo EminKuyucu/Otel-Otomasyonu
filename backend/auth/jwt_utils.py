@@ -3,33 +3,38 @@ import os
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import request, jsonify, current_app
+from .rbac.roles import normalize_role
 
 # JWT Secret Key (production'da environment variable'dan alınmalı)
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
-JWT_EXPIRATION_HOURS = 24
+JWT_EXPIRATION_HOURS = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRE_MINUTES', '30')) // 60 or 24
 
 
 def generate_token(personel_id, kullanici_adi, gorev):
     """
     JWT token üretir.
-    
+
     Args:
         personel_id: Personel ID'si
         kullanici_adi: Kullanıcı adı
         gorev: Personel görevi
-        
+
     Returns:
         str: JWT token
     """
+    # Normalize role for RBAC
+    normalized_role = normalize_role(gorev)
+
     payload = {
         'personel_id': personel_id,
         'kullanici_adi': kullanici_adi,
-        'gorev': gorev,
+        'gorev': gorev,  # Keep original gorev for backward compatibility
+        'role': normalized_role,  # Add normalized role for RBAC
         'exp': datetime.utcnow() + timedelta(hours=JWT_EXPIRATION_HOURS),
         'iat': datetime.utcnow()
     }
-    
+
     token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
     return token
 

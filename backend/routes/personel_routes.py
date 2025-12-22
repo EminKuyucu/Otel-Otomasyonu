@@ -3,11 +3,13 @@ from database import execute_query
 from models.personel import Personel
 from auth.jwt_utils import token_required
 from auth.password_utils import hash_password
+from auth.rbac.decorators import read_required, write_required, delete_required
 
 bp = Blueprint('personel', __name__, url_prefix='/api/personel')
 
 @bp.route('/', methods=['GET'])
 @token_required
+@read_required('personel')
 def get_personel(current_user):
     """Tüm personeli listele (Korumalı)"""
     try:
@@ -41,6 +43,7 @@ def get_personel_by_id(personel_id, current_user):
 
 @bp.route('/', methods=['POST'])
 @token_required
+@write_required('personel')
 def create_personel(current_user):
     """Yeni personel oluştur (Korumalı)"""
     try:
@@ -79,6 +82,7 @@ def create_personel(current_user):
 
 @bp.route('/<int:personel_id>', methods=['PUT'])
 @token_required
+@write_required('personel')
 def update_personel(personel_id, current_user):
     """Personel bilgilerini güncelle (Korumalı)"""
     try:
@@ -120,6 +124,7 @@ def update_personel(personel_id, current_user):
 
 @bp.route('/<int:personel_id>', methods=['DELETE'])
 @token_required
+@delete_required('personel')
 def delete_personel(personel_id, current_user):
     """Personel sil (Korumalı)"""
     try:

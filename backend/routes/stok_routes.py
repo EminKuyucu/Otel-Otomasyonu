@@ -2,11 +2,13 @@ from flask import Blueprint, request, jsonify
 from database import execute_query
 from models.depo_stok import DepoStok
 from auth.jwt_utils import token_required
+from auth.rbac.decorators import read_required, write_required, permission_required
 
 bp = Blueprint('stok', __name__, url_prefix='/api/stock')
 
 @bp.route('/', methods=['GET'])
 @token_required
+@read_required('depo_stok')
 def get_stock(current_user):
     """Tum stoklari listele (Korumali)"""
     try:
@@ -48,6 +50,7 @@ def get_stock_by_id(stock_id, current_user):
 
 @bp.route('/', methods=['POST'])
 @token_required
+@write_required('depo_stok')
 def create_stock(current_user):
     """Yeni stok olustur (Korumali)"""
     try:
@@ -94,6 +97,7 @@ def create_stock(current_user):
 
 @bp.route('/<int:stock_id>', methods=['PUT'])
 @token_required
+@write_required('depo_stok')
 def update_stock(stock_id, current_user):
     """Stok bilgilerini guncelle (Korumali)"""
     try:
@@ -156,6 +160,7 @@ def update_stock(stock_id, current_user):
 
 @bp.route('/<int:stock_id>', methods=['DELETE'])
 @token_required
+@permission_required('depo_stok_delete')
 def delete_stock(stock_id, current_user):
     """Stok sil (Korumali)"""
     try:
@@ -175,6 +180,7 @@ def delete_stock(stock_id, current_user):
 
 @bp.route('/increase', methods=['POST'])
 @token_required
+@permission_required('depo_stok_amount_update')
 def increase_stock(current_user):
     """Stok artir (Korumali)"""
     try:
@@ -221,6 +227,7 @@ def increase_stock(current_user):
 
 @bp.route('/decrease', methods=['POST'])
 @token_required
+@permission_required('depo_stok_amount_update')
 def decrease_stock(current_user):
     """Stok azalt (Korumali) - 0'in altina dusmemeli"""
     try:

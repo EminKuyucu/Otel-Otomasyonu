@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 function Header() {
   const navigate = useNavigate()
-  const user = JSON.parse(localStorage.getItem('user') || '{}')
-  const name = user?.name || user?.ad_soyad || 'Personel'
+  const { user, logout } = useAuth()
+  const name = user?.ad_soyad || 'Personel'
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    navigate('/login')
+    logout() // Clear auth state
+    navigate('/login') // Navigate to login page
   }
 
   return (

@@ -3,6 +3,7 @@ from database import execute_query
 from models.personel import Personel
 from auth.jwt_utils import generate_token
 from auth.password_utils import verify_password
+from auth.rbac.roles import normalize_role
 
 bp = Blueprint('auth', __name__, url_prefix='/api')
 
@@ -82,6 +83,7 @@ def login():
         )
         
         # Başarılı giriş
+        user_role = normalize_role(personel_data.get('gorev'))
         return jsonify({
             'message': 'Giriş başarılı',
             'token': token,
@@ -89,7 +91,8 @@ def login():
                 'personel_id': personel_data.get('personel_id'),
                 'kullanici_adi': personel_data.get('kullanici_adi'),
                 'ad_soyad': personel_data.get('ad_soyad'),
-                'gorev': personel_data.get('gorev')
+                'gorev': personel_data.get('gorev'),
+                'role': user_role
             }
         }), 200
         

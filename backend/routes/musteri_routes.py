@@ -4,11 +4,13 @@ from models.musteri import Musteri
 from models.musteri_harcama import MusteriHarcama
 from models.musteri_degerlendirme import MusteriDegerlendirme
 from auth.jwt_utils import token_required
+from auth.rbac.decorators import read_required, write_required, delete_required
 
 bp = Blueprint('musteri', __name__, url_prefix='/api/customers')
 
 @bp.route('/', methods=['GET'])
 @token_required
+@read_required('musteriler')
 def get_customers(current_user):
     """Tum musterileri listele (Korumali)"""
     try:
@@ -52,6 +54,7 @@ def get_customer_by_id(customer_id, current_user):
 
 @bp.route('/', methods=['POST'])
 @token_required
+@write_required('musteriler')
 def create_customer(current_user):
     """Yeni musteri olustur (Korumali)"""
     try:
@@ -115,6 +118,7 @@ def create_customer(current_user):
 
 @bp.route('/<int:customer_id>', methods=['PUT'])
 @token_required
+@write_required('musteriler')
 def update_customer(customer_id, current_user):
     """Musteri bilgilerini guncelle (Korumali)"""
     try:
@@ -201,6 +205,7 @@ def update_customer(customer_id, current_user):
 
 @bp.route('/<int:customer_id>', methods=['DELETE'])
 @token_required
+@delete_required('musteriler')
 def delete_customer(customer_id, current_user):
     """Musteri sil (Korumali)"""
     try:

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { dashboardService } from '../services/api'
 import { getUser } from '../services/authService'
 import {
@@ -26,7 +26,6 @@ import {
 } from 'lucide-react'
 
 const Dashboard = () => {
-  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [user, setUser] = useState(null)
@@ -109,18 +108,7 @@ const Dashboard = () => {
     }
   }
 
-  // Buton click handler'ları
-  const handleNewReservation = () => {
-    navigate('/reservations')
-  }
-
-  const handleAddRoom = () => {
-    navigate('/rooms')
-  }
-
-  const handleAddCustomer = () => {
-    navigate('/customers')
-  }
+  // Removed navigate handlers - using Link components directly
 
   // Sabit duyurular (şimdilik hardcoded, ileride backend'den çekilebilir)
   const announcements = [
@@ -219,27 +207,27 @@ const Dashboard = () => {
           </h1>
           <p className="text-xl text-gray-200 mb-8">Bugün otel yönetimini kolaylaştırın.</p>
           <div className="flex flex-wrap gap-4">
-            <button
-              onClick={handleNewReservation}
+            <Link
+              to="/reservations"
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200"
             >
               <Plus className="w-5 h-5 mr-2" />
               Yeni Rezervasyon
-            </button>
-            <button
-              onClick={handleAddRoom}
+            </Link>
+            <Link
+              to="/rooms"
               className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200"
             >
               <Bed className="w-5 h-5 mr-2" />
               Oda Ekle
-            </button>
-            <button
-              onClick={handleAddCustomer}
+            </Link>
+            <Link
+              to="/customers"
               className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-medium flex items-center transition-colors duration-200"
             >
               <UsersIcon className="w-5 h-5 mr-2" />
               Müşteri Ekle
-            </button>
+            </Link>
           </div>
         </div>
       </div>

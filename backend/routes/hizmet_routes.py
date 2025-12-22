@@ -2,11 +2,13 @@ from flask import Blueprint, request, jsonify
 from database import execute_query
 from models.ekstra_hizmet import EkstraHizmet
 from auth.jwt_utils import token_required
+from auth.rbac.decorators import read_required, write_required, delete_required, permission_required
 
 bp = Blueprint('hizmet', __name__, url_prefix='/api/services')
 
 @bp.route('/', methods=['GET'])
 @token_required
+@read_required('ekstra_hizmetler')
 def get_services(current_user):
     """Tum ekstra hizmetleri listele (Korumali)"""
     try:
@@ -28,6 +30,7 @@ def get_services(current_user):
 
 @bp.route('/<int:service_id>', methods=['GET'])
 @token_required
+@read_required('ekstra_hizmetler')
 def get_service_by_id(service_id, current_user):
     """ID'ye gore hizmet getir (Korumali)"""
     try:
@@ -48,6 +51,7 @@ def get_service_by_id(service_id, current_user):
 
 @bp.route('/', methods=['POST'])
 @token_required
+@write_required('ekstra_hizmetler')
 def create_service(current_user):
     """Yeni ekstra hizmet olustur (Korumali)"""
     try:
@@ -93,6 +97,7 @@ def create_service(current_user):
 
 @bp.route('/<int:service_id>', methods=['PUT'])
 @token_required
+@write_required('ekstra_hizmetler')
 def update_service(service_id, current_user):
     """Hizmet bilgilerini guncelle (Korumali)"""
     try:
@@ -153,6 +158,7 @@ def update_service(service_id, current_user):
 
 @bp.route('/<int:service_id>', methods=['DELETE'])
 @token_required
+@delete_required('ekstra_hizmetler')
 def delete_service(service_id, current_user):
     """Hizmet sil (Korumali)"""
     try:
@@ -179,5 +185,48 @@ def delete_service(service_id, current_user):
         execute_query(delete_query, params=(service_id,), fetch=False)
 
         return jsonify({'message': 'Hizmet silindi'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/<int:service_id>/status', methods=['PATCH'])
+@token_required
+@permission_required('ekstra_hizmetler_status_update')
+def update_service_status(service_id, current_user):
+    """Hizmet durumunu aktif/pasif yap (Sadece durum guncellemesi - OPERATIONS icin)"""
+    try:
+        data = request.get_json()
+
+        if not data or 'aktif' not in data:
+            return jsonify({'error': 'aktif alani zorunludur'}), 400
+
+        aktif = bool(data['aktif'])
+
+        # Hizmet var mi kontrol et
+        check_query = "SELECT hizmet_id FROM ekstra_hizmetler WHERE hizmet_id = %s"
+        existing = execute_query(check_query, params=(service_id,), fetch=True)
+        if not existing:
+            return jsonify({'error': 'Hizmet bulunamadi'}), 404
+
+        # Sadece aktif/pasif durumu guncelle
+        update_query = """
+        UPDATE ekstra_hizmetler
+        SET aktif = %s
+        WHERE hizmet_id = %s
+        """
+        execute_query(update_query, params=(aktif, service_id), fetch=False)
+
+        # Guncellenmis hizmeti getir
+        select_query = """
+        SELECT hizmet_id, hizmet_adi, birim_fiyat, kategori, aktif
+        FROM ekstra_hizmetler
+        WHERE hizmet_id = %s
+        """
+        result = execute_query(select_query, params=(service_id,), fetch=True)
+        service = EkstraHizmet.from_dict(result[0])
+
+        return jsonify({
+            'message': f'Hizmet {"aktif" if aktif else "pasif"} yapıldı',
+            'service': service.to_dict()
+        }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 400

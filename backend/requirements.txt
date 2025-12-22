@@ -5,3 +5,4 @@ python-dotenv==1.0.0
 PyJWT==2.10.1
 Werkzeug==2.3.7
 SQLAlchemy==2.0.32
+marshmallow==3.20.1

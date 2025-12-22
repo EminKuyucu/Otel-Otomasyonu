@@ -1,12 +1,34 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 
 function Login() {
   const navigate = useNavigate()
+  const { login, isAuthenticated, loading: authLoading, role } = useAuth()
   const [form, setForm] = useState({ username: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && !authLoading && role) {
+      // Redirect based on role
+      switch (role) {
+        case 'ADMIN':
+          navigate('/dashboard')
+          break
+        case 'RECEPTION':
+          navigate('/reservations')
+          break
+        case 'OPERATIONS':
+          navigate('/stock')
+          break
+        default:
+          navigate('/dashboard')
+      }
+    }
+  }, [isAuthenticated, authLoading, role, navigate])
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
@@ -16,17 +38,23 @@ function Login() {
     e.preventDefault()
     setError('')
     setLoading(true)
+
     try {
       // Backend login endpoint: /api/login
       const res = await api.post('/login', {
         email: form.username,
         password: form.password,
       })
+
       const { token, user } = res.data
-      localStorage.setItem('token', token)
-      localStorage.setItem('user', JSON.stringify(user || {}))
-      navigate('/dashboard')
+
+      // Use AuthContext login method (state management only)
+      login(token, user)
+
+      // Navigation will happen via useEffect when role is set
+
     } catch (err) {
+      console.error('Login error:', err)
       setError(err.response?.data?.error || err.response?.data?.message || 'Giriş başarısız')
     } finally {
       setLoading(false)

@@ -2,11 +2,13 @@ from flask import Blueprint, request, jsonify
 from database import execute_query
 from models.odeme import Odeme
 from auth.jwt_utils import token_required
+from auth.rbac.decorators import read_required, write_required, delete_required
 
 bp = Blueprint('odeme', __name__, url_prefix='/api/payments')
 
 @bp.route('/', methods=['GET'])
 @token_required
+@read_required('odemeler')
 def get_payments(current_user):
     """Tum odemeleri listele (Korumali)"""
     try:
@@ -68,6 +70,7 @@ def get_payment_by_id(payment_id, current_user):
 
 @bp.route('/', methods=['POST'])
 @token_required
+@write_required('odemeler')
 def create_payment(current_user):
     """Yeni odeme olustur (Korumali)"""
     try:
@@ -231,6 +234,7 @@ def get_payments_by_reservation(reservation_id, current_user):
 
 @bp.route('/<int:payment_id>', methods=['PUT'])
 @token_required
+@write_required('odemeler')
 def update_payment(payment_id, current_user):
     """Odeme bilgilerini guncelle (Korumali)"""
     try:
@@ -304,6 +308,7 @@ def update_payment(payment_id, current_user):
 
 @bp.route('/<int:payment_id>', methods=['DELETE'])
 @token_required
+@delete_required('odemeler')
 def delete_payment(payment_id, current_user):
     """Odeme sil (Korumali)"""
     try:

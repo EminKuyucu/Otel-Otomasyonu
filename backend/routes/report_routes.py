@@ -1,12 +1,14 @@
 from flask import Blueprint, jsonify
 from database import execute_query
 from auth.jwt_utils import token_required
+from auth.rbac.decorators import read_required
 
 bp = Blueprint('reports', __name__, url_prefix='/api/reports')
 
 
 @bp.route('/monthly', methods=['GET'])
 @token_required
+@read_required('reports')
 def monthly_report(current_user):
     """Aylık kazanç raporu (MySQL view: monthly_report_view)"""
     try:
@@ -19,6 +21,7 @@ def monthly_report(current_user):
 
 @bp.route('/reservations', methods=['GET'])
 @token_required
+@read_required('reports')
 def reservation_report(current_user):
     """Detaylı rezervasyon raporu (MySQL view: reservation_report_view)"""
     try:

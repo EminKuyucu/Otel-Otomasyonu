@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify
 from database import execute_query
 from auth.jwt_utils import token_required
+from auth.rbac.decorators import read_required
 
 bp = Blueprint('dashboard', __name__, url_prefix='/api/dashboard')
 
 @bp.route('/stats', methods=['GET'])
 @token_required
+@read_required('dashboard')
 def get_dashboard_stats(current_user):
     """
     Dashboard istatistiklerini döndüren endpoint.
@@ -84,6 +86,7 @@ def get_dashboard_stats(current_user):
 
 @bp.route('/active-reservations', methods=['GET'])
 @token_required
+@read_required('dashboard')
 def get_active_reservations(current_user):
     """
     Aktif rezervasyonları döndüren endpoint.
@@ -136,6 +139,7 @@ def get_active_reservations(current_user):
 
 @bp.route('/todays-events', methods=['GET'])
 @token_required
+@read_required('dashboard')
 def get_todays_events(current_user):
     """
     Bugünkü giriş/çıkış olaylarını döndüren endpoint.

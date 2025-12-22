@@ -288,20 +288,19 @@ def delete_room(room_id, current_user):
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-# Frontend'in kullandığı /api/odalar endpoint'leri
 @bp_odalar.route('/', methods=['GET'])
 @token_required
 def get_odalar(current_user):
     """Filtre parametreleri ile odaları getir (Frontend uyumluluğu için)"""
     try:
-        # Query parametrelerini al
+        # Query parametreleri
         durum = request.args.get('durum')
         oda_tipi = request.args.get('oda_tipi')
         min_fiyat_str = request.args.get('minFiyat')
         max_fiyat_str = request.args.get('maxFiyat')
         arama = request.args.get('arama')
 
-        # Fiyat parametrelerini float'a dönüştür
+        # Fiyat dönüşümleri
         min_fiyat = None
         max_fiyat = None
 
@@ -313,8 +312,8 @@ def get_odalar(current_user):
         except ValueError:
             return jsonify({'error': 'Fiyat parametreleri geçerli sayı olmalıdır'}), 400
 
-        # SQLAlchemy ile filtrele
         db = db_session()
+
         try:
             odalar = OdaService.get_filtered_odalar(
                 db=db,
@@ -325,11 +324,12 @@ def get_odalar(current_user):
                 arama=arama
             )
 
-            # Eğer hiç oda yoksa test verileri ekle (sadece filtre yokken)
-            if len(odalar) == 0 and not any([durum, oda_tipi, min_fiyat, max_fiyat]):
+            # SADECE filtre yoksa ve oda yoksa test verisi ekle
+            if len(odalar) == 0 and not any([durum, oda_tipi, min_fiyat, max_fiyat, arama]):
                 print("Veritabanında oda bulunamadı, test verileri ekleniyor...")
                 add_test_rooms()
-                # Tekrar odaları getir
+
+                # Test verisi sonrası tekrar çek
                 odalar = OdaService.get_filtered_odalar(
                     db=db,
                     durum=durum,
@@ -346,6 +346,7 @@ def get_odalar(current_user):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @bp_odalar.route('/<int:oda_id>', methods=['GET'])
 @token_required

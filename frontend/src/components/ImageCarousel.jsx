@@ -7,26 +7,42 @@ const ImageCarousel = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0)
 
+  // Güvenli images kontrolü
+  const safeImages = Array.isArray(images) ? images.filter(img =>
+    img && typeof img === 'object' && img.url && typeof img.url === 'string'
+  ) : []
+
   useEffect(() => {
-    if (currentIndex >= images.length && images.length > 0) {
+    if (safeImages.length === 0) {
+      setCurrentIndex(0)
+    } else if (currentIndex >= safeImages.length) {
       setCurrentIndex(0)
     }
-  }, [images, currentIndex])
+  }, [safeImages, currentIndex])
 
   const nextSlide = () => {
+    if (safeImages.length <= 1) return
     setCurrentIndex((prevIndex) =>
-      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+      prevIndex === safeImages.length - 1 ? 0 : prevIndex + 1
     )
   }
 
   const prevSlide = () => {
+    if (safeImages.length <= 1) return
     setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? images.length - 1 : prevIndex - 1
+      prevIndex === 0 ? safeImages.length - 1 : prevIndex - 1
     )
   }
 
   const goToSlide = (index) => {
-    setCurrentIndex(index)
+    if (index >= 0 && index < safeImages.length) {
+      setCurrentIndex(index)
+    }
+  }
+
+  // Eğer hiç görsel yoksa hiçbir şey render etme
+  if (safeImages.length === 0) {
+    return null
   }
 
 
