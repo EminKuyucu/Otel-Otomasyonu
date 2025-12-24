@@ -51,6 +51,12 @@ from routes.odeme_routes import bp as payments_bp
 from routes.report_routes import bp as reports_bp
 from routes.dashboard_routes import bp as dashboard_bp
 
+# Test amaçlı route'lari import et
+from routes.test_auth_routes import bp as test_auth_bp
+from routes.test_oda_routes import bp as test_oda_bp
+from routes.test_musteri_routes import bp as test_musteri_bp
+from routes.test_rezervasyon_routes import bp as test_rezervasyon_bp
+
 # Blueprint'leri kaydet
 app.register_blueprint(auth_bp)
 app.register_blueprint(rooms_bp)
@@ -63,6 +69,12 @@ app.register_blueprint(services_bp)
 app.register_blueprint(payments_bp)
 app.register_blueprint(reports_bp)
 app.register_blueprint(dashboard_bp)
+
+# Test amaçlı blueprint'leri kaydet
+app.register_blueprint(test_auth_bp)
+app.register_blueprint(test_oda_bp)
+app.register_blueprint(test_musteri_bp)
+app.register_blueprint(test_rezervasyon_bp)
 
 @app.route('/')
 def index():
